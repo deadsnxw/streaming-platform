@@ -47,6 +47,25 @@ services:
       - app-network
     restart: unless-stopped
 
+  postgres:
+    image: postgres:16
+    container_name: app-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: streaming_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  pg_data:

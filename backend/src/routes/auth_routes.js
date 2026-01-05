@@ -7,13 +7,6 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 
-router.get('/me', authenticateToken, (req, res) => {
-    res.json({
-        message: 'Protected route',
-        user: req.user
-    });
-});
-
 router.post('/logout', authenticateToken, (req, res) => {
     res.json({ message: 'Logged out successfully' });
 });
