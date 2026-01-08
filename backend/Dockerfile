@@ -2,12 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+RUN apk add --no-cache postgresql-client
 
+COPY package*.json ./
 RUN npm install
 
 COPY . .
 
 EXPOSE 5000
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "./wait-for.sh postgres npm run migrate:up && npm run dev"]
