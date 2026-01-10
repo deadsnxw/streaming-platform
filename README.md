@@ -68,3 +68,18 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+---
+
+## Live streaming (OBS) 🔴
+
+You can stream from OBS to the local player using RTMP → HLS (nginx-rtmp).
+
+- Start services: `docker-compose up --build`
+- In OBS: set the **RTMP Server** to `rtmp://localhost:1935/stream` and the **Stream Key** to `stream`.
+- The HLS playlist will be available at `http://localhost:8081/hls/stream.m3u8`.
+- Open the app and go to the **Live** page to watch the stream. If using a browser other than Safari, the frontend uses `hls.js` to play HLS streams.
+
+Notes:
+- The `nginx-rtmp` service stores HLS fragments under `/tmp/hls` inside the container (mounted to `./nginx-rtmp` on host).
+- If you run the frontend outside Docker, ensure `REACT_APP_STREAM_URL` points at `http://localhost:8081/hls`.

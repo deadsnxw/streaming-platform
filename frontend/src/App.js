@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import LivePage from "./pages/LivePage";
 import { authService } from "./services/authService";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
             <header className="app-header">
                 <nav>
                     <Link to="/">Home</Link>
+                    <Link to="/live">Live</Link>
                     {user ? (
                         <>
                             <Link to="/profile">Profile</Link>
@@ -46,6 +48,7 @@ export default function App() {
                 <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/profile" element={user ? <ProfilePage user={user} onLogout={() => { authService.logout(); setUser(null); }} /> : <Navigate to="/login" replace />} />
+                <Route path="/live" element={<LivePage />} />
                 <Route path="/" element={user ? <HomePage user={user} /> : <Navigate to="/login" replace />} />
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
