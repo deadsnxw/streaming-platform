@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -11,9 +9,16 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./uploads:/app/uploads
     environment:
       - NODE_ENV=development
       - PORT=5000
+      - HOST=0.0.0.0
+      - JWT_SECRET=${JWT_SECRET:-viperrdoublerrkaiangelninemiceqweqweqwe}
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=*
+    env_file:
+      - ./.env
     networks:
       - app-network
     restart: unless-stopped
@@ -42,9 +47,10 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - REACT_APP_API_URL=http://localhost:5000/api
+      - REACT_APP_API_URL=${BACKEND_URL:-http://localhost:5000/api}
       - CHOKIDAR_USEPOLLING=true
-      - WDS_SOCKET_PORT=3000
+      - WDS_SOCKET_PORT=0
+      - HOST=0.0.0.0
     depends_on:
       - backend
     stdin_open: true
@@ -53,6 +59,25 @@ services:
       - app-network
     restart: unless-stopped
 
+  postgres:
+    image: postgres:16
+    container_name: app-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: streaming_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  pg_data:

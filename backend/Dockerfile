@@ -2,17 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Копируем package.json из backend
-COPY package*.json ./
+RUN apk add --no-cache postgresql-client
 
-# Устанавливаем зависимости
+COPY package*.json ./
 RUN npm install
 
-# Копируем весь backend код
 COPY . .
 
-# Открываем порт
 EXPOSE 5000
 
-# Запускаем сервер
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "./wait-for.sh postgres npm run migrate:up && npm run dev"]

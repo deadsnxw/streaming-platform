@@ -6,12 +6,12 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LivePage from "./pages/LivePage";
 import { authService } from "./services/authService";
+import UploadVideoPage from "./pages/UploadVideoPage";
 
 export default function App() {
     const [user, setUser] = useState(() => authService.getCurrentUser());
 
     useEffect(() => {
-        // Keep state in sync with localStorage changes made elsewhere
         const handleStorage = () => setUser(authService.getCurrentUser());
         window.addEventListener('storage', handleStorage);
         return () => window.removeEventListener('storage', handleStorage);
@@ -49,6 +49,7 @@ export default function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/profile" element={user ? <ProfilePage user={user} onLogout={() => { authService.logout(); setUser(null); }} /> : <Navigate to="/login" replace />} />
                 <Route path="/live" element={<LivePage />} />
+                <Route path="/upload" element={<UploadVideoPage />} />
                 <Route path="/" element={user ? <HomePage user={user} /> : <Navigate to="/login" replace />} />
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>

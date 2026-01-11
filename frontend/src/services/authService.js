@@ -2,27 +2,43 @@ import { fetchAPI } from './api.js';
 
 export const authService = {
     register: async (userData) => {
-        const data = await fetchAPI('/auth/register', {
-            method: 'POST',
-            body: userData,
-        });
-        return data;
+        try {
+            const data = await fetchAPI('/auth/register', {
+                method: 'POST',
+                body: userData,
+            });
+
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+
+            return data;
+        } catch (error) {
+            throw new Error(error.message || 'Registration failed');
+        }
     },
 
     login: async (credentials) => {
-        const data = await fetchAPI('/auth/login', {
-            method: 'POST',
-            body: credentials,
-        });
+        try {
+            const data = await fetchAPI('/auth/login', {
+                method: 'POST',
+                body: credentials,
+            });
 
-        if (data.id) {
-            localStorage.setItem('user', JSON.stringify(data));
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+
+            return data;
+        } catch (error) {
+            throw new Error(error.message || 'Login failed');
         }
-
-        return data;
     },
 
     logout: () => {
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
     },
 
@@ -31,7 +47,23 @@ export const authService = {
         return userStr ? JSON.parse(userStr) : null;
     },
 
+    getToken: () => {
+        return localStorage.getItem('token');
+    },
+
     isAuthenticated: () => {
-        return !!localStorage.getItem('user');
+        return !!localStorage.getItem('token');
+    },
+
+    checkAuth: async () => {
+        try {
+            const data = await fetchAPI('/auth/me', {
+                method: 'GET',
+            });
+            return data;
+        } catch (error) {
+            authService.logout();
+            throw error;
+        }
     }
 };
