@@ -55,7 +55,6 @@ export const authService = {
         return !!localStorage.getItem('token');
     },
 
-    // Проверка текущего пользователя через API
     checkAuth: async () => {
         try {
             const data = await fetchAPI('/auth/me', {

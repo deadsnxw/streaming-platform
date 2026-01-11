@@ -1,15 +1,20 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import authRoutes from './routes/auth_routes.js';
 import userRoutes from './routes/user_routes.js';
+import videoRoutes from './routes/video_routes.js'
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+app.use('/uploads', express.static(path.resolve('uploads')));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/videos', videoRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
