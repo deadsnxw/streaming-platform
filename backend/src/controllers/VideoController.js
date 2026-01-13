@@ -64,7 +64,10 @@ export const watchVideo = async (req, res) => {
 
 export const uploadVideo = async (req, res) => {
     try {
-        if (!req.file) {
+        const videoFile = req.files?.video?.[0];
+        const thumbnailFile = req.files?.thumbnail?.[0];
+
+        if (!videoFile) {
             return res.status(400).json({ message: 'No video file uploaded' });
         }
 
@@ -74,17 +77,19 @@ export const uploadVideo = async (req, res) => {
             return res.status(400).json({ message: 'Title is required' });
         }
 
-        const videoUrl = `/uploads/videos/${req.file.filename}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const videoUrl = `${baseUrl}/uploads/videos/${videoFile.filename}`;
+        const thumbnailUrl = thumbnailFile ? `${baseUrl}/uploads/thumbnails/${thumbnailFile.filename}` : null;
 
         const video = await createVideo({
             userId: req.user.id,
             title,
             description: description || '',
             videoUrl,
-            thumbnailUrl: null,
+            thumbnailUrl,
             duration: null,
-            fileSize: req.file.size,
-            mimeType: req.file.mimetype
+            fileSize: videoFile.size,
+            mimeType: videoFile.mimetype
         });
 
         res.status(201).json({

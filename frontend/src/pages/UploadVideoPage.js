@@ -6,6 +6,7 @@ const UploadVideoPage = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState(null);
+    const [thumbnail, setThumbnail] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -23,6 +24,9 @@ const UploadVideoPage = () => {
         formData.append('video', file);
         formData.append('title', title);
         formData.append('description', description);
+        if (thumbnail) {
+            formData.append('thumbnail', thumbnail);
+        }
 
         try {
             setLoading(true);
@@ -103,6 +107,22 @@ const UploadVideoPage = () => {
                     {file && (
                         <p style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
                             ✓ Вибрано: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                    )}
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                        Мініатюра (опціонально):
+                    </label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setThumbnail(e.target.files[0] || null)}
+                        style={{ display: 'block' }}
+                    />
+                    {thumbnail && (
+                        <p style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
+                            ✓ Вибрано мініатюру: {thumbnail.name}
                         </p>
                     )}
                 </div>
