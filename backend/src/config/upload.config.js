@@ -15,17 +15,26 @@ if (!fs.existsSync(THUMBNAILS_DIR)) {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, UPLOAD_DIR);
+        if (file.fieldname === 'thumbnail') {
+            cb(null, THUMBNAILS_DIR);
+        } else {
+            cb(null, UPLOAD_DIR);
+        }
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
-        cb(null, `video-${uniqueSuffix}${ext}`);
+
+        if (file.fieldname === 'thumbnail') {
+            cb(null, `thumb-${uniqueSuffix}${ext}`);
+        } else {
+            cb(null, `video-${uniqueSuffix}${ext}`);
+        }
     }
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedMimeTypes = [
+    const videoMimeTypes = [
         'video/mp4',
         'video/webm',
         'video/ogg',
@@ -33,7 +42,22 @@ const fileFilter = (req, file, cb) => {
         'video/x-msvideo', // .avi
     ];
 
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    const imageMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+    ];
+
+    if (file.fieldname === 'thumbnail') {
+        if (imageMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid thumbnail type. Only image files are allowed.'), false);
+        }
+        return;
+    }
+
+    if (videoMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
         cb(new Error('Invalid file type. Only video files are allowed.'), false);

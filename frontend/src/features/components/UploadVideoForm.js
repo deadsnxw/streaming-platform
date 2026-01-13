@@ -5,6 +5,7 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState(null);
+    const [thumbnail, setThumbnail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -20,6 +21,9 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
         formData.append('video', file);
         formData.append('title', title);
         formData.append('description', description);
+        if (thumbnail) {
+            formData.append('thumbnail', thumbnail);
+        }
 
         setLoading(true);
         setError(null);
@@ -34,6 +38,7 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
             setTitle('');
             setDescription('');
             setFile(null);
+            setThumbnail(null);
         } catch (err) {
             console.error(err);
             setError(err.message);
@@ -65,6 +70,12 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
                 onChange={(e) => setFile(e.target.files[0])}
                 style={{ display: 'block', marginBottom: '10px' }}
                 required
+            />
+            <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setThumbnail(e.target.files[0] || null)}
+                style={{ display: 'block', marginBottom: '10px' }}
             />
             <button type="submit" disabled={loading}>
                 {loading ? 'Завантаження...' : 'Завантажити'}

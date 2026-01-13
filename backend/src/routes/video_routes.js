@@ -18,7 +18,10 @@ const router = Router();
 router.post(
     '/upload',
     authenticateToken,
-    uploadMiddleware.single('video'),
+    uploadMiddleware.fields([
+        { name: 'video', maxCount: 1 },
+        { name: 'thumbnail', maxCount: 1 }
+    ]),
     uploadVideo
 );
 
