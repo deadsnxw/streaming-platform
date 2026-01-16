@@ -116,11 +116,7 @@ export const getVideo = async (req, res) => {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        await incrementViewCount(id);
-
-        const ipAddress = req.ip || req.connection.remoteAddress;
-        await recordVideoView(id, req.user?.id, ipAddress);
-
+        // Don't increment view count here - it will be incremented after watching
         res.json(video);
     } catch (error) {
         console.error('Get video error:', error);
@@ -210,5 +206,63 @@ export const deleteVideoById = async (req, res) => {
     } catch (error) {
         console.error('Delete video error:', error);
         res.status(500).json({ message: 'Failed to delete video', error: error.message });
+    }
+};
+
+export const recordWatch = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { watchDuration } = req.body; // in seconds
+
+        if (typeof watchDuration !== 'number' || watchDuration < 0) {
+            return res.status(400).json({ message: 'Invalid watch duration' });
+        }
+
+        const video = await getVideoById(id);
+
+        if (!video) {
+            return res.status(404).json({ message: 'Video not found' });
+        }
+
+        // Don't count views from the video owner
+        if (req.user && req.user.id === video.user_id) {
+            // Still record the view for analytics, but don't increment count
+            const ipAddress = req.ip || req.connection.remoteAddress;
+            await recordVideoView(id, req.user.id, ipAddress, Math.round(watchDuration));
+            return res.json({ message: 'View recorded (owner view, count not incremented)' });
+        }
+
+        // Very short videos (1-4 seconds): require 50% of duration (handles 1-second videos)
+        // Short videos (5-120 seconds / 2 minutes): require 2 seconds
+        // Long videos (>120 seconds): require 30 seconds or 50% of duration, whichever is smaller
+        const videoDuration = video.duration || 0;
+        let requiredWatchTime;
+        
+        if (videoDuration <= 4) {
+            requiredWatchTime = Math.max(1, Math.ceil(videoDuration * 0.5));
+        } else if (videoDuration <= 120) {
+            requiredWatchTime = 2;
+        } else {
+            const fiftyPercent = Math.ceil(videoDuration * 0.5);
+            requiredWatchTime = Math.min(30, fiftyPercent);
+        }
+        
+        // Ensure required time never exceeds video duration (safety check)
+        requiredWatchTime = Math.min(requiredWatchTime, videoDuration);
+
+        // Record the view
+        const ipAddress = req.ip || req.connection.remoteAddress;
+        await recordVideoView(id, req.user?.id, ipAddress, Math.round(watchDuration));
+
+        // Only increment view count if watch duration meets threshold
+        if (watchDuration >= requiredWatchTime) {
+            await incrementViewCount(id);
+            res.json({ message: 'View counted', counted: true });
+        } else {
+            res.json({ message: 'View recorded but not counted (insufficient watch time)', counted: false });
+        }
+    } catch (error) {
+        console.error('Record watch error:', error);
+        res.status(500).json({ message: 'Failed to record watch', error: error.message });
     }
 };
