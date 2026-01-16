@@ -7,7 +7,8 @@ import {
     getUserVideosList,
     updateVideoDetails,
     deleteVideoById,
-    watchVideo
+    watchVideo,
+    recordWatch
 } from '../controllers/VideoController.js';
 
 import { uploadVideo as uploadMiddleware } from '../config/upload.config.js';
@@ -33,7 +34,9 @@ router.get('/user/:userId', getUserVideosList);
 
 router.get('/:id', getVideo);
 
-router.get('/:id/watch', authenticateToken, watchVideo)
+router.get('/:id/watch', authenticateToken, watchVideo);
+
+router.post('/:id/watch', authenticateToken, recordWatch);
 
 router.put('/:id', authenticateToken, updateVideoDetails);
 
