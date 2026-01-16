@@ -1,6 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const VideoCard = ({ video, onClick }) => {
+    const navigate = useNavigate();
+
+    const handleUserClick = (e) => {
+        e.stopPropagation();
+        if (video.user_id) {
+            navigate(`/profile/${video.user_id}`);
+        }
+    };
+
     return (
         <div
             className="video-card"
@@ -47,6 +57,22 @@ const VideoCard = ({ video, onClick }) => {
                 )}
             </div>
             <h4 style={{ margin: '5px 0' }}>{video.title}</h4>
+            {video.nickname && (
+                <p 
+                    onClick={handleUserClick}
+                    style={{ 
+                        fontSize: '12px', 
+                        color: '#6441A5', 
+                        margin: '4px 0',
+                        cursor: 'pointer',
+                        textDecoration: 'none'
+                    }}
+                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                >
+                    {video.nickname}
+                </p>
+            )}
             <p style={{ fontSize: '12px', color: '#555' }}>{video.views_count} views</p>
         </div>
     );

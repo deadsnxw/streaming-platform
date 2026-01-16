@@ -47,6 +47,7 @@ export default function App() {
             <Routes>
                 <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/profile/:userId" element={<ProfilePage />} />
                 <Route path="/profile" element={user ? <ProfilePage user={user} onLogout={() => { authService.logout(); setUser(null); }} /> : <Navigate to="/login" replace />} />
                 <Route path="/live" element={<LivePage />} />
                 <Route path="/upload" element={<UploadVideoPage />} />

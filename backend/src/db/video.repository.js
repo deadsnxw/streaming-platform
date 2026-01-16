@@ -84,18 +84,20 @@ export const getVideoById = async (videoId) => {
 export const getUserVideos = async (userId, includePrivate = false) => {
     let query = `
         SELECT 
-            video_id, title, description, video_url, 
-            thumbnail_url, duration, views_count, 
-            is_public, created_at
-        FROM videos
-        WHERE user_id = $1 AND is_active = true
+            v.video_id, v.user_id, v.title, v.description, v.video_url, 
+            v.thumbnail_url, v.duration, v.views_count, 
+            v.is_public, v.created_at,
+            u.nickname, u.avatar_url
+        FROM videos v
+        JOIN users u ON v.user_id = u.user_id
+        WHERE v.user_id = $1 AND v.is_active = true
     `;
 
     if (!includePrivate) {
-        query += ' AND is_public = true';
+        query += ' AND v.is_public = true';
     }
 
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY v.created_at DESC';
 
     const { rows } = await pool.query(query, [userId]);
     return rows;
@@ -104,7 +106,7 @@ export const getUserVideos = async (userId, includePrivate = false) => {
 export const getAllPublicVideos = async (limit = 20, offset = 0) => {
     const { rows } = await pool.query(
         `SELECT 
-            v.video_id, v.title, v.description, 
+            v.video_id, v.user_id, v.title, v.description, 
             v.thumbnail_url, v.duration, v.views_count, v.created_at,
             u.nickname, u.avatar_url
          FROM videos v
