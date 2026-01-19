@@ -3,7 +3,8 @@ import cors from 'cors';
 import path from 'path';
 import authRoutes from './routes/auth_routes.js';
 import userRoutes from './routes/user_routes.js';
-import videoRoutes from './routes/video_routes.js'
+import videoRoutes from './routes/video_routes.js';
+import subscriptionRoutes from './routes/subscription_routes.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use('/uploads', express.static(path.resolve('uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
