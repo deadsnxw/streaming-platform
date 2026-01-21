@@ -98,7 +98,19 @@ export default function HomePage({ user }) {
             </div>
 
             {selectedVideoId && (
-                <VideoModal videoId={selectedVideoId} onClose={handleCloseModal} />
+                <VideoModal 
+                    videoId={selectedVideoId} 
+                    onClose={handleCloseModal}
+                    onVideoUpdate={() => {
+                        // Reload videos if a video was updated
+                        loadVideos(feedType);
+                    }}
+                    onVideoDelete={() => {
+                        // Remove deleted video from list
+                        setVideos(videos.filter(v => v.video_id !== selectedVideoId));
+                        handleCloseModal();
+                    }}
+                />
             )}
         </div>
     );

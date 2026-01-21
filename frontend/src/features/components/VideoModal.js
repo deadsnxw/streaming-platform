@@ -1,19 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { authService } from '../../services/authService';
 import { fetchAPI } from '../../services/api';
+import VideoEditModal from './VideoEditModal';
 
-const VideoModal = ({ videoId, onClose }) => {
+const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
     const [videoBlobUrl, setVideoBlobUrl] = useState(null);
+    const [videoInfo, setVideoInfo] = useState(null);
     const [error, setError] = useState(null);
+    const [editingVideo, setEditingVideo] = useState(null);
     const videoRef = useRef(null);
     const watchStartTime = useRef(null);
     const totalWatchTime = useRef(0);
     const lastTimeUpdate = useRef(0);
     const hasRecordedWatch = useRef(false);
+    const currentUser = authService.getCurrentUser();
+    const isOwner = currentUser && videoInfo && currentUser.user_id === videoInfo.user_id;
 
     useEffect(() => {
         const fetchVideo = async () => {
             try {
+                // Fetch video info first
+                const videoData = await fetchAPI(`/videos/${videoId}`, { method: 'GET' });
+                setVideoInfo(videoData);
+
+                // Then fetch video blob
                 const token = authService.getToken();
                 const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
                 const response = await fetch(`${apiBaseUrl}/videos/${videoId}/watch`, {
@@ -143,32 +153,87 @@ const VideoModal = ({ videoId, onClose }) => {
             onClick={onClose}
         >
             <div style={{ position: 'relative', width: '80%', maxWidth: '900px' }} onClick={(e) => e.stopPropagation()}>
-                <button
-                    onClick={() => {
-                        // Record watch time before closing
-                        if (videoRef.current && watchStartTime.current && !hasRecordedWatch.current) {
-                            const finalTime = videoRef.current.currentTime || 0;
-                            const timeWatched = finalTime - lastTimeUpdate.current;
-                            if (timeWatched > 0) {
-                                totalWatchTime.current += timeWatched;
+                <div style={{ position: 'absolute', top: '-50px', right: 0, display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {isOwner && videoInfo && (
+                        <>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingVideo(videoInfo);
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#6441A5',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                Редагувати
+                            </button>
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('Ви впевнені, що хочете видалити це відео?')) {
+                                        try {
+                                            await fetchAPI(`/videos/${videoId}`, { method: 'DELETE' });
+                                            if (onVideoDelete) {
+                                                onVideoDelete(videoId);
+                                            }
+                                            onClose();
+                                        } catch (err) {
+                                            alert('Не вдалося видалити відео');
+                                        }
+                                    }
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#dc3545',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                Видалити
+                            </button>
+                        </>
+                    )}
+                    <button
+                        onClick={() => {
+                            // Record watch time before closing
+                            if (videoRef.current && watchStartTime.current && !hasRecordedWatch.current) {
+                                const finalTime = videoRef.current.currentTime || 0;
+                                const timeWatched = finalTime - lastTimeUpdate.current;
+                                if (timeWatched > 0) {
+                                    totalWatchTime.current += timeWatched;
+                                }
+                                recordWatchTime(totalWatchTime.current);
                             }
-                            recordWatchTime(totalWatchTime.current);
-                        }
-                        onClose();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        top: '-40px',
-                        right: 0,
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '24px',
-                        color: '#fff',
-                        cursor: 'pointer',
-                    }}
-                >
-                    &times;
-                </button>
+                            onClose();
+                        }}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '24px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        &times;
+                    </button>
+                </div>
+                {videoInfo && (
+                    <div style={{ marginBottom: '10px', color: '#fff' }}>
+                        <h2 style={{ margin: 0, color: '#fff' }}>{videoInfo.title}</h2>
+                        {videoInfo.description && (
+                            <p style={{ margin: '5px 0', color: '#ccc' }}>{videoInfo.description}</p>
+                        )}
+                    </div>
+                )}
                 {error ? (
                     <p style={{ color: 'white' }}>{error}</p>
                 ) : (
@@ -184,6 +249,31 @@ const VideoModal = ({ videoId, onClose }) => {
                     </video>
                 )}
             </div>
+
+            {editingVideo && (
+                <VideoEditModal
+                    videoId={editingVideo.video_id}
+                    video={editingVideo}
+                    onClose={() => {
+                        setEditingVideo(null);
+                        // Reload video info after edit
+                        fetchAPI(`/videos/${videoId}`, { method: 'GET' }).then(setVideoInfo);
+                    }}
+                    onUpdate={(updatedVideo) => {
+                        setVideoInfo(updatedVideo);
+                        setEditingVideo(null);
+                        if (onVideoUpdate) {
+                            onVideoUpdate(updatedVideo);
+                        }
+                    }}
+                    onDelete={(deletedVideoId) => {
+                        if (onVideoDelete) {
+                            onVideoDelete(deletedVideoId);
+                        }
+                        onClose();
+                    }}
+                />
+            )}
         </div>
     );
 };

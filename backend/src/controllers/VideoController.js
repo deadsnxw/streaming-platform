@@ -116,7 +116,6 @@ export const getVideo = async (req, res) => {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        // Don't increment view count here - it will be incremented after watching
         res.json(video);
     } catch (error) {
         console.error('Get video error:', error);
