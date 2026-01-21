@@ -12,18 +12,35 @@ export const findUserByEmailOrNickname = async (login) => {
 
 export const getAllUsers = async () => {
     const { rows } = await pool.query(
-        `SELECT user_id, email, nickname, avatar_url, is_streamer
-         FROM users
-         WHERE is_active = true`
+        `SELECT 
+            u.user_id, 
+            u.email, 
+            u.nickname, 
+            u.avatar_url, 
+            u.is_streamer,
+            COALESCE(COUNT(s.subscription_id), 0) as subscriber_count
+         FROM users u
+         LEFT JOIN subscriptions s ON u.user_id = s.channel_id
+         WHERE u.is_active = true
+         GROUP BY u.user_id`
     );
     return rows;
 };
 
 export const getUserById = async (id) => {
     const { rows } = await pool.query(
-        `SELECT user_id, email, nickname, avatar_url, bio, birth_date
-         FROM users
-         WHERE user_id = $1 AND is_active = true`,
+        `SELECT 
+            u.user_id, 
+            u.email, 
+            u.nickname, 
+            u.avatar_url, 
+            u.bio, 
+            u.birth_date,
+            COALESCE(COUNT(s.subscription_id), 0) as subscriber_count
+         FROM users u
+         LEFT JOIN subscriptions s ON u.user_id = s.channel_id
+         WHERE u.user_id = $1 AND u.is_active = true
+         GROUP BY u.user_id`,
         [id]
     );
     return rows[0];
