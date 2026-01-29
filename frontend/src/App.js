@@ -7,6 +7,9 @@ import ProfilePage from "./pages/ProfilePage";
 import LivePage from "./pages/LivePage";
 import { authService } from "./services/authService";
 import UploadVideoPage from "./pages/UploadVideoPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import VerifyCodePage from "./pages/VerifyCodePage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 export default function App() {
     const [user, setUser] = useState(() => authService.getCurrentUser());
@@ -53,6 +56,9 @@ export default function App() {
                 <Route path="/upload" element={<UploadVideoPage />} />
                 <Route path="/" element={user ? <HomePage user={user} /> : <Navigate to="/login" replace />} />
                 <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="/password-reset" element={<ForgotPasswordPage />} />
+                <Route path="/password-reset/verify" element={<VerifyCodePage />} />
+                <Route path="/password-reset/new-password" element={<ResetPasswordPage />} />
             </Routes>
         </Router>
     );
