@@ -1,18 +1,23 @@
 import { useState } from "react";
 import { fetchAPI } from "../../services/api";
 
-export default function RequestResetCode() {
+export default function RequestResetCode({ onNext }) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await fetchAPI("/password-reset/request", {
+      const data = await fetchAPI("/auth/password-reset/request", {
         method: "POST",
         body: { email },
       });
+
       setMessage(data.message);
+
+      if (onNext) {
+        onNext(email);
+      }
     } catch (err) {
       setMessage(err.message);
     }

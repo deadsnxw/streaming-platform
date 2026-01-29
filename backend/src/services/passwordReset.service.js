@@ -23,6 +23,8 @@ export const requestPasswordReset = async (user) => {
     expiresAt,
   });
 
+  console.log("RESET FOR USER:", user.user_id, user.email);
+
   await sendPasswordResetCode(user.email, code);
 };
 
@@ -34,10 +36,14 @@ export const verifyResetCode = async (email, code) => {
   if (!resetEntry) return false;
 
   const isValid = compareResetCode(code, resetEntry.code_hash);
+  
+  console.log("INPUT CODE:", code);
+  console.log("HASH FROM DB:", resetEntry.code_hash);
+  console.log("HASHED INPUT:", hashResetCode(code));
+  console.log("COMPARE RESULT:", isValid);
+  
   if (!isValid) return false;
-
-  const now = new Date();
-  if (resetEntry.expires_at < now) return false;
+  if (resetEntry.expires_at < new Date()) return false;
 
   return true;
 };
@@ -55,9 +61,7 @@ export const resetPassword = async (email, code, newPassword) => {
   }
 
   const newHashedPassword = await hashPassword(newPassword);
-
   await updateUser(user.user_id, { password_hash: newHashedPassword });
-
   await markResetCodeAsUsed(resetEntry.id);
 };
 

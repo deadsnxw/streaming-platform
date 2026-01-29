@@ -16,8 +16,8 @@ export default function VerifyCodePage() {
       <h1>Підтвердження коду</h1>
       <VerifyCode
         email={email}
-        onVerified={() =>
-          navigate("/password-reset/new-password", { state: { email } })
+        onVerified={(code) =>
+          navigate("/password-reset/new-password", { state: { email, code } })
         }
       />
     </div>

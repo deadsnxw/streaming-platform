@@ -5,8 +5,9 @@ export default function ResetPasswordPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
+  const code = location.state?.code;
 
-  if (!email) {
+  if (!email || !code) {
     navigate("/password-reset");
     return null;
   }
@@ -14,7 +15,7 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <h1>Встановлення нового пароля</h1>
-      <ResetPassword email={email} />
+      <ResetPassword email={email} code={code}/>
     </div>
   );
 }

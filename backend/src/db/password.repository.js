@@ -21,24 +21,19 @@ export const createResetCode = async ({
   return rows[0];
 };
 
-export const findValidResetCode = async ({
-  userId,
-  codeHash,
-}) => {
+export const findValidResetCode = async (userId) => {
   const { rows } = await pool.query(
     `
     SELECT *
     FROM password_reset_codes
     WHERE user_id = $1
-      AND code_hash = $2
       AND used = false
       AND expires_at > NOW()
     ORDER BY created_at DESC
     LIMIT 1
     `,
-    [userId, codeHash]
+    [userId]
   );
-
   return rows[0];
 };
 
@@ -61,4 +56,21 @@ export const deleteOldResetCodes = async (userId) => {
     `,
     [userId]
   );
+};
+
+export const findResetCodeByHash = async (userId, codeHash) => {
+  const { rows } = await pool.query(
+    `
+    SELECT *
+    FROM password_reset_codes
+    WHERE user_id = $1
+      AND code_hash = $2
+      AND used = false
+      AND expires_at > NOW()
+    ORDER BY created_at DESC
+    LIMIT 1
+    `,
+    [userId, codeHash]
+  );
+  return rows[0];
 };

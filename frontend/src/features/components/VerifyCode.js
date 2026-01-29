@@ -8,12 +8,12 @@ export default function VerifyCode({ email, onVerified }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await fetchAPI("/password-reset/verify", {
+      const data = await fetchAPI("/auth/password-reset/verify", {
         method: "POST",
         body: { email, code },
       });
       setMessage(data.message);
-      onVerified(); // переходимо на форму нового пароля
+      onVerified(code);
     } catch (err) {
       setMessage(err.message);
     }
@@ -21,7 +21,7 @@ export default function VerifyCode({ email, onVerified }) {
 
   const handleResend = async () => {
     try {
-      const data = await fetchAPI("/password-reset/resend", {
+      const data = await fetchAPI("/auth/password-reset/resend", {
         method: "POST",
         body: { email },
       });
