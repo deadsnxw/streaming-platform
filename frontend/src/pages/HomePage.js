@@ -32,8 +32,8 @@ export default function HomePage({ user }) {
     loadVideos(feedType);
   }, [feedType]);
 
-  const handleVideoClick = (videoId) => {
-    setSelectedVideoId(videoId);
+  const handleVideoClick = (video_id) => {
+    setSelectedVideoId(video_id);
   };
 
   const handleCloseModal = () => {
@@ -105,7 +105,7 @@ export default function HomePage({ user }) {
 
       {selectedVideoId && (
         <VideoModal
-          videoId={selectedVideoId}
+          video_id={selectedVideoId}
           onClose={handleCloseModal}
           onVideoUpdate={() => loadVideos(feedType)}
           onVideoDelete={() => {

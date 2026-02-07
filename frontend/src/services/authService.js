@@ -44,7 +44,9 @@ export const authService = {
 
     getCurrentUser: () => {
         const userStr = localStorage.getItem('user');
-        return userStr ? JSON.parse(userStr) : null;
+        const user = userStr ? JSON.parse(userStr) : null;
+        console.log("getCurrentUser:", user); // ДОДАЙТЕ ЦЕЙ ЛОГ
+        return user;
     },
 
     getToken: () => {

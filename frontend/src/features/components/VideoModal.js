@@ -3,7 +3,7 @@ import { authService } from '../../services/authService';
 import { fetchAPI } from '../../services/api';
 import VideoEditModal from './VideoEditModal';
 
-const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
+const VideoModal = ({ video_id, onClose, onVideoUpdate, onVideoDelete }) => {
     const [videoBlobUrl, setVideoBlobUrl] = useState(null);
     const [videoInfo, setVideoInfo] = useState(null);
     const [error, setError] = useState(null);
@@ -19,14 +19,13 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
     useEffect(() => {
         const fetchVideo = async () => {
             try {
-                // Fetch video info first
-                const videoData = await fetchAPI(`/videos/${videoId}`, { method: 'GET' });
+                const videoData = await fetchAPI(`/videos/${video_id}`, { method: 'GET' });
+                console.log('Fetched videoData:', videoData);
                 setVideoInfo(videoData);
 
-                // Then fetch video blob
                 const token = authService.getToken();
                 const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-                const response = await fetch(`${apiBaseUrl}/videos/${videoId}/watch`, {
+                const response = await fetch(`${apiBaseUrl}/videos/${video_id}/watch`, {
                     headers: {
                         ...(token && { Authorization: `Bearer ${token}` }),
                     },
@@ -50,14 +49,14 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
         return () => {
             if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
         };
-    }, [videoId]);
+    }, [video_id]);
 
     const recordWatchTime = async (watchDuration) => {
         if (hasRecordedWatch.current) return;
         hasRecordedWatch.current = true;
 
         try {
-            await fetchAPI(`/videos/${videoId}/watch`, {
+            await fetchAPI(`/videos/${video_id}/watch`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -93,7 +92,7 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
             if (watchStartTime.current) {
                 const currentTime = video.currentTime;
                 const timeWatched = currentTime - lastTimeUpdate.current;
-                if (timeWatched > 0.5) { // Update every 0.5 seconds
+                if (timeWatched > 0.5) {
                     totalWatchTime.current += timeWatched;
                     lastTimeUpdate.current = currentTime;
                 }
@@ -122,7 +121,6 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
             video.removeEventListener('timeupdate', handleTimeUpdate);
             video.removeEventListener('ended', handleEnded);
 
-            // Record watch time when component unmounts (user closes modal)
             if (watchStartTime.current && !hasRecordedWatch.current) {
                 const finalTime = video.currentTime || 0;
                 const timeWatched = finalTime - lastTimeUpdate.current;
@@ -132,9 +130,9 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
                 recordWatchTime(totalWatchTime.current);
             }
         };
-    }, [videoBlobUrl, videoId]);
+    }, [videoBlobUrl, video_id]);
 
-    if (!videoId) return null;
+    if (!video_id) return null;
 
     return (
         <div
@@ -159,6 +157,7 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    console.log('Opening edit modal with videoInfo:', videoInfo);
                                     setEditingVideo(videoInfo);
                                 }}
                                 style={{
@@ -178,9 +177,9 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
                                     e.stopPropagation();
                                     if (window.confirm('Ви впевнені, що хочете видалити це відео?')) {
                                         try {
-                                            await fetchAPI(`/videos/${videoId}`, { method: 'DELETE' });
+                                            await fetchAPI(`/videos/${video_id}`, { method: 'DELETE' });
                                             if (onVideoDelete) {
-                                                onVideoDelete(videoId);
+                                                onVideoDelete(video_id);
                                             }
                                             onClose();
                                         } catch (err) {
@@ -204,7 +203,6 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
                     )}
                     <button
                         onClick={() => {
-                            // Record watch time before closing
                             if (videoRef.current && watchStartTime.current && !hasRecordedWatch.current) {
                                 const finalTime = videoRef.current.currentTime || 0;
                                 const timeWatched = finalTime - lastTimeUpdate.current;
@@ -252,12 +250,11 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
 
             {editingVideo && (
                 <VideoEditModal
-                    videoId={editingVideo.video_id}
+                    video_id={editingVideo.video_id}
                     video={editingVideo}
                     onClose={() => {
                         setEditingVideo(null);
-                        // Reload video info after edit
-                        fetchAPI(`/videos/${videoId}`, { method: 'GET' }).then(setVideoInfo);
+                        fetchAPI(`/videos/${video_id}`, { method: 'GET' }).then(setVideoInfo);
                     }}
                     onUpdate={(updatedVideo) => {
                         setVideoInfo(updatedVideo);
@@ -266,9 +263,9 @@ const VideoModal = ({ videoId, onClose, onVideoUpdate, onVideoDelete }) => {
                             onVideoUpdate(updatedVideo);
                         }
                     }}
-                    onDelete={(deletedVideoId) => {
+                    onDelete={(deletedVideo_id) => {
                         if (onVideoDelete) {
-                            onVideoDelete(deletedVideoId);
+                            onVideoDelete(deletedVideo_id);
                         }
                         onClose();
                     }}

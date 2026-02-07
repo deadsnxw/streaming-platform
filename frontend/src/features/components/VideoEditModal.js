@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAPI } from '../../services/api';
 
-const VideoEditModal = ({ videoId, video, onClose, onUpdate, onDelete }) => {
+const VideoEditModal = ({ video_id, video, onClose, onUpdate, onDelete }) => {
     const [title, setTitle] = useState(video?.title || '');
     const [description, setDescription] = useState(video?.description || '');
     const [isPublic, setIsPublic] = useState(video?.is_public !== false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    console.log('VideoEditModal props:', { video_id, video });
+
+    if (!video_id) {
+        console.error('CRITICAL: video_id is not provided!', { video_id, video });
+    }
 
     useEffect(() => {
         if (video) {
@@ -19,10 +25,17 @@ const VideoEditModal = ({ videoId, video, onClose, onUpdate, onDelete }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        
+        if (!video_id) {
+            setError('Помилка: ID відео не визначено');
+            console.error('Cannot submit: video_id is missing');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            const updated = await fetchAPI(`/videos/${videoId}`, {
+            const updated = await fetchAPI(`/videos/${video_id}`, {
                 method: 'PUT',
                 body: {
                     title,
@@ -43,18 +56,24 @@ const VideoEditModal = ({ videoId, video, onClose, onUpdate, onDelete }) => {
     };
 
     const handleDelete = async () => {
+        if (!video_id) {
+            setError('Помилка: ID відео не визначено');
+            console.error('Cannot delete: video_id is missing');
+            return;
+        }
+
         if (!window.confirm('Ви впевнені, що хочете видалити це відео? Цю дію неможливо скасувати.')) {
             return;
         }
 
         setLoading(true);
         try {
-            await fetchAPI(`/videos/${videoId}`, {
+            await fetchAPI(`/videos/${video_id}`, {
                 method: 'DELETE'
             });
 
             if (onDelete) {
-                onDelete(videoId);
+                onDelete(video_id);
             }
             onClose();
         } catch (err) {
