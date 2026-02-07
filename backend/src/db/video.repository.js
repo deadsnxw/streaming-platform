@@ -9,7 +9,8 @@ export const createVideo = async ({
     duration,
     fileSize,
     mimeType,
-    isPublic = true
+    isPublic = true,
+    tags = []
 }) => {
     const { rows } = await pool.query(
         `INSERT INTO videos (
@@ -52,7 +53,17 @@ export const createVideo = async ({
         ]
     );
 
-    return rows[0];
+    const video = rows[0];
+
+    // Add tags if provided
+    if (tags && tags.length > 0) {
+        await addTagsToVideo(video.video_id, tags);
+        video.tags = await getVideoTags(video.video_id);
+    } else {
+        video.tags = [];
+    }
+
+    return video;
 };
 
 export const getVideoById = async (videoId) => {
@@ -78,7 +89,13 @@ export const getVideoById = async (videoId) => {
         [videoId]
     );
 
-    return rows[0];
+    if (rows.length === 0) {
+        return null;
+    }
+
+    const video = rows[0];
+    video.tags = await getVideoTags(videoId);
+    return video;
 };
 
 export const getUserVideos = async (userId, includePrivate = false) => {
@@ -100,7 +117,16 @@ export const getUserVideos = async (userId, includePrivate = false) => {
     query += ' ORDER BY v.created_at DESC';
 
     const { rows } = await pool.query(query, [userId]);
-    return rows;
+    
+    // Add tags to each video
+    const videosWithTags = await Promise.all(
+        rows.map(async (video) => {
+            video.tags = await getVideoTags(video.video_id);
+            return video;
+        })
+    );
+
+    return videosWithTags;
 };
 
 export const getAllPublicVideos = async (limit = 20, offset = 0) => {
@@ -117,7 +143,15 @@ export const getAllPublicVideos = async (limit = 20, offset = 0) => {
         [limit, offset]
     );
 
-    return rows;
+    // Add tags to each video
+    const videosWithTags = await Promise.all(
+        rows.map(async (video) => {
+            video.tags = await getVideoTags(video.video_id);
+            return video;
+        })
+    );
+
+    return videosWithTags;
 };
 
 export const incrementViewCount = async (videoId) => {
@@ -184,4 +218,131 @@ export const recordVideoView = async (videoId, userId = null, ipAddress = null, 
     );
 
     return rows[0];
+};
+
+// Tag-related functions
+export const getOrCreateTag = async (tagName) => {
+    // Normalize tag name (lowercase, trim)
+    const normalizedName = tagName.trim().toLowerCase();
+    
+    // Try to get existing tag
+    let { rows } = await pool.query(
+        `SELECT tag_id, name FROM tags WHERE name = $1`,
+        [normalizedName]
+    );
+
+    if (rows.length > 0) {
+        return rows[0];
+    }
+
+    // Create new tag if it doesn't exist
+    const result = await pool.query(
+        `INSERT INTO tags (name) VALUES ($1) RETURNING tag_id, name`,
+        [normalizedName]
+    );
+
+    return result.rows[0];
+};
+
+export const addTagsToVideo = async (videoId, tagNames) => {
+    if (!tagNames || tagNames.length === 0) {
+        return [];
+    }
+
+    const tagIds = [];
+    
+    // Get or create all tags
+    for (const tagName of tagNames) {
+        const tag = await getOrCreateTag(tagName);
+        tagIds.push(tag.tag_id);
+    }
+
+    // Insert video-tag relationships (ignore duplicates)
+    const insertPromises = tagIds.map(tagId =>
+        pool.query(
+            `INSERT INTO video_tags (video_id, tag_id) 
+             VALUES ($1, $2) 
+             ON CONFLICT (video_id, tag_id) DO NOTHING`,
+            [videoId, tagId]
+        )
+    );
+
+    await Promise.all(insertPromises);
+
+    // Return the tags that were added
+    const { rows } = await pool.query(
+        `SELECT t.tag_id, t.name 
+         FROM tags t
+         JOIN video_tags vt ON t.tag_id = vt.tag_id
+         WHERE vt.video_id = $1`,
+        [videoId]
+    );
+
+    return rows;
+};
+
+export const getVideoTags = async (videoId) => {
+    const { rows } = await pool.query(
+        `SELECT t.tag_id, t.name 
+         FROM tags t
+         JOIN video_tags vt ON t.tag_id = vt.tag_id
+         WHERE vt.video_id = $1
+         ORDER BY t.name`,
+        [videoId]
+    );
+
+    return rows;
+};
+
+export const searchVideos = async (searchQuery, limit = 20, offset = 0) => {
+    if (!searchQuery || searchQuery.trim().length === 0) {
+        return getAllPublicVideos(limit, offset);
+    }
+
+    const searchTerm = `%${searchQuery.trim().toLowerCase()}%`;
+    
+    // Search by video title (using trigram similarity) OR by tag names
+    const { rows } = await pool.query(
+        `SELECT DISTINCT
+            v.video_id, 
+            v.user_id, 
+            v.title, 
+            v.description, 
+            v.thumbnail_url, 
+            v.duration, 
+            v.views_count, 
+            v.created_at,
+            u.nickname, 
+            u.avatar_url,
+            GREATEST(
+                similarity(LOWER(v.title), LOWER($1)),
+                COALESCE(MAX(similarity(LOWER(t.name), LOWER($1))), 0)
+            ) as relevance
+         FROM videos v
+         JOIN users u ON v.user_id = u.user_id
+         LEFT JOIN video_tags vt ON v.video_id = vt.video_id
+         LEFT JOIN tags t ON vt.tag_id = t.tag_id
+         WHERE v.is_public = true 
+           AND v.is_active = true
+           AND (
+               similarity(LOWER(v.title), LOWER($1)) > 0.1
+               OR similarity(LOWER(t.name), LOWER($1)) > 0.1
+           )
+         GROUP BY v.video_id, v.user_id, v.title, v.description, 
+                  v.thumbnail_url, v.duration, v.views_count, 
+                  v.created_at, u.nickname, u.avatar_url
+         ORDER BY relevance DESC, v.created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [searchQuery.trim(), limit, offset]
+    );
+
+    // Add tags to each video
+    const videosWithTags = await Promise.all(
+        rows.map(async (video) => {
+            video.tags = await getVideoTags(video.video_id);
+            return video;
+        })
+    );
+
+    return videosWithTags;
 };
