@@ -18,7 +18,10 @@ export const watchVideo = async (req, res) => {
         const video = await getVideoById(id);
         if (!video) return res.status(404).json({ message: 'Video not found' });
 
-        if (!video.is_public && (!req.user || req.user.id !== video.user_id)) {
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user?.user_id || req.user?.id;
+
+        if (!video.is_public && (!req.user || userId !== video.user_id)) {
             return res.status(403).json({ message: 'Access denied' });
         }
 
@@ -77,12 +80,19 @@ export const uploadVideo = async (req, res) => {
             return res.status(400).json({ message: 'Title is required' });
         }
 
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user.user_id || req.user.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
         const baseUrl = `${req.protocol}://${req.get('host')}`;
         const videoUrl = `${baseUrl}/uploads/videos/${videoFile.filename}`;
         const thumbnailUrl = thumbnailFile ? `${baseUrl}/uploads/thumbnails/${thumbnailFile.filename}` : null;
 
         const video = await createVideo({
-            userId: req.user.id,
+            userId: userId,
             title,
             description: description || '',
             videoUrl,
@@ -112,7 +122,10 @@ export const getVideo = async (req, res) => {
             return res.status(404).json({ message: 'Video not found' });
         }
 
-        if (!video.is_public && (!req.user || req.user.id !== video.user_id)) {
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user?.user_id || req.user?.id;
+
+        if (!video.is_public && (!req.user || userId !== video.user_id)) {
             return res.status(403).json({ message: 'Access denied' });
         }
 
@@ -142,7 +155,14 @@ export const getPublicVideos = async (req, res) => {
 
 export const getMyVideos = async (req, res) => {
     try {
-        const videos = await getUserVideos(req.user.id, true); // Включаючи приватні
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user.user_id || req.user.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const videos = await getUserVideos(userId, true); // Включаючи приватні
 
         res.json({ videos });
     } catch (error) {
@@ -155,7 +175,10 @@ export const getUserVideosList = async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const includePrivate = req.user && req.user.id === parseInt(userId);
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const currentUserId = req.user?.user_id || req.user?.id;
+
+        const includePrivate = req.user && currentUserId === parseInt(userId);
         const videos = await getUserVideos(userId, includePrivate);
 
         res.json({ videos });
@@ -170,12 +193,26 @@ export const updateVideoDetails = async (req, res) => {
         const { id } = req.params;
         const { title, description, isPublic } = req.body;
 
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user.user_id || req.user.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        // ДОДАНО: логування для дебагу
+        console.log('Update video request:', {
+            videoId: id,
+            userId: userId,
+            body: req.body
+        });
+
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (isPublic !== undefined) updateData.is_public = isPublic === 'true' || isPublic === true;
 
-        const video = await updateVideo(id, req.user.id, updateData);
+        const video = await updateVideo(id, userId, updateData);
 
         if (!video) {
             return res.status(404).json({ message: 'Video not found or access denied' });
@@ -195,7 +232,20 @@ export const deleteVideoById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const video = await deleteVideo(id, req.user.id);
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user.user_id || req.user.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        // ДОДАНО: логування для дебагу
+        console.log('Delete video request:', {
+            videoId: id,
+            userId: userId
+        });
+
+        const video = await deleteVideo(id, userId);
 
         if (!video) {
             return res.status(404).json({ message: 'Video not found or access denied' });
@@ -223,11 +273,14 @@ export const recordWatch = async (req, res) => {
             return res.status(404).json({ message: 'Video not found' });
         }
 
+        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const userId = req.user?.user_id || req.user?.id;
+
         // Don't count views from the video owner
-        if (req.user && req.user.id === video.user_id) {
+        if (req.user && userId === video.user_id) {
             // Still record the view for analytics, but don't increment count
             const ipAddress = req.ip || req.connection.remoteAddress;
-            await recordVideoView(id, req.user.id, ipAddress, Math.round(watchDuration));
+            await recordVideoView(id, userId, ipAddress, Math.round(watchDuration));
             return res.json({ message: 'View recorded (owner view, count not incremented)' });
         }
 
@@ -251,7 +304,7 @@ export const recordWatch = async (req, res) => {
 
         // Record the view
         const ipAddress = req.ip || req.connection.remoteAddress;
-        await recordVideoView(id, req.user?.id, ipAddress, Math.round(watchDuration));
+        await recordVideoView(id, userId, ipAddress, Math.round(watchDuration));
 
         // Only increment view count if watch duration meets threshold
         if (watchDuration >= requiredWatchTime) {

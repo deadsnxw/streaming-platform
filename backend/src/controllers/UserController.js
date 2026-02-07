@@ -1,7 +1,7 @@
 import { getAllUsers, getUserById, updateUser } from '../db/user.repository.js';
 
 export const getMe = async (req, res) => {
-    const user = await getUserById(req.user.id);
+    const user = await getUserById(req.user.user_id);
     res.json(user);
 };
 
@@ -17,6 +17,6 @@ export const getUsers = async (req, res) => {
 };
 
 export const updateMe = async (req, res) => {
-    const updated = await updateUser(req.user.id, req.body);
+    const updated = await updateUser(req.user.user_id, req.body);
     res.json(updated);
 };

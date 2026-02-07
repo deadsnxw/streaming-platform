@@ -17,7 +17,7 @@ export const watchVideo = async (req, res) => {
             return res.status(404).json({ message: 'Video not found' });
         }
 
-        if (!video.is_public && (!req.user || req.user.id !== video.user_id)) {
+        if (!video.is_public && (!req.user || req.user.user_id !== video.user_id)) {
             return res.status(403).json({ message: 'Access denied' });
         }
 

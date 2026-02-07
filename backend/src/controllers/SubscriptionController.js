@@ -9,7 +9,7 @@ import { getUserById } from '../db/user.repository.js';
 
 export const subscribeToUser = async (req, res) => {
     try {
-        const subscriberId = req.user.id;
+        const subscriberId = req.user.user_id;
         const { channelId } = req.body;
 
         if (!channelId) {
@@ -40,7 +40,7 @@ export const subscribeToUser = async (req, res) => {
 
 export const unsubscribeFromUser = async (req, res) => {
     try {
-        const subscriberId = req.user.id;
+        const subscriberId = req.user.user_id;
         const { channelId } = req.body;
 
         if (!channelId) {
@@ -62,7 +62,7 @@ export const unsubscribeFromUser = async (req, res) => {
 
 export const getSubscriptionStatus = async (req, res) => {
     try {
-        const subscriberId = req.user.id;
+        const subscriberId = req.user.user_id;
         const { channelId } = req.query;
 
         if (!channelId) {
@@ -80,7 +80,7 @@ export const getSubscriptionStatus = async (req, res) => {
 
 export const getMySubscriptions = async (req, res) => {
     try {
-        const subscriberId = req.user.id;
+        const subscriberId = req.user.user_id;
 
         const subscriptions = await getUserSubscriptions(subscriberId);
 
@@ -93,7 +93,7 @@ export const getMySubscriptions = async (req, res) => {
 
 export const getSubscribedFeed = async (req, res) => {
     try {
-        const subscriberId = req.user.id;
+        const subscriberId = req.user.user_id;
         const { limit = 20, offset = 0 } = req.query;
 
         const videos = await getSubscribedVideos(subscriberId, parseInt(limit), parseInt(offset));
