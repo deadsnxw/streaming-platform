@@ -19,6 +19,22 @@ export const authService = {
         }
     },
 
+    checkEmail: async (email) => {
+        const data = await fetchAPI('/auth/check-email', {
+            method: 'POST',
+            body: { email },
+        });
+        return data; // { exists: boolean }
+    },
+
+    checkNickname: async (nickname) => {
+        const data = await fetchAPI('/auth/check-nickname', {
+            method: 'POST',
+            body: { nickname },
+        });
+        return data; // { exists: boolean }
+    },
+
     login: async (credentials) => {
         try {
             const data = await fetchAPI('/auth/login', {

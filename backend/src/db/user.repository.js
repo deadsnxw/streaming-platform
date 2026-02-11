@@ -10,6 +10,26 @@ export const findUserByEmailOrNickname = async (login) => {
     return rows[0];
 };
 
+export const findUserByEmail = async (email) => {
+    const { rows } = await pool.query(
+        `SELECT * FROM users 
+         WHERE email = $1
+         LIMIT 1`,
+        [email]
+    );
+    return rows[0];
+};
+
+export const findUserByNickname = async (nickname) => {
+    const { rows } = await pool.query(
+        `SELECT * FROM users 
+         WHERE nickname = $1
+         LIMIT 1`,
+        [nickname]
+    );
+    return rows[0];
+};
+
 export const getAllUsers = async () => {
     const { rows } = await pool.query(
         `SELECT 

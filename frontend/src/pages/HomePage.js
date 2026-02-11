@@ -2,6 +2,18 @@ import React, { useEffect, useState } from "react";
 import { fetchAPI } from "../services/api";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
+import {
+  homeContainer,
+  homeHeaderRow,
+  homeHeaderTitle,
+  homeHeaderButtons,
+  homeSearchForm,
+  homeSearchInput,
+  homeSearchButton,
+  homeVideosGrid,
+  homeToggleButtonBase,
+  homeClearSearchButton,
+} from "../styles/HomePageStyles";
 
 export default function HomePage({ user }) {
   const [videos, setVideos] = useState([]);
@@ -77,18 +89,9 @@ export default function HomePage({ user }) {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-          flexWrap: "wrap",
-          gap: "15px",
-        }}
-      >
-        <h1 style={{ margin: 0 }}>
+    <div style={homeContainer}>
+      <div style={homeHeaderRow}>
+        <h1 style={homeHeaderTitle}>
           {isSearching
             ? `Результати пошуку: "${searchQuery}"`
             : feedType === "subscriptions"
@@ -96,16 +99,13 @@ export default function HomePage({ user }) {
             : "Рекомендації"}
         </h1>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={homeHeaderButtons}>
           {user && !isSearching && (
             <>
               <button
                 onClick={() => setFeedType("all")}
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
+                  ...homeToggleButtonBase,
                   backgroundColor: feedType === "all" ? "#6441A5" : "#eee",
                   color: feedType === "all" ? "#fff" : "#333",
                   fontWeight: feedType === "all" ? "600" : "400",
@@ -116,10 +116,7 @@ export default function HomePage({ user }) {
               <button
                 onClick={() => setFeedType("subscriptions")}
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
+                  ...homeToggleButtonBase,
                   backgroundColor:
                     feedType === "subscriptions" ? "#6441A5" : "#eee",
                   color: feedType === "subscriptions" ? "#fff" : "#333",
@@ -133,14 +130,7 @@ export default function HomePage({ user }) {
           {isSearching && (
             <button
               onClick={handleClearSearch}
-              style={{
-                padding: "8px 16px",
-                borderRadius: "4px",
-                border: "none",
-                cursor: "pointer",
-                backgroundColor: "#999",
-                color: "#fff",
-              }}
+              style={homeClearSearchButton}
             >
               Очистити пошук
             </button>
@@ -149,40 +139,17 @@ export default function HomePage({ user }) {
       </div>
 
       {/* Search Bar */}
-      <form
-        onSubmit={handleSearch}
-        style={{
-          marginBottom: "20px",
-          display: "flex",
-          gap: "10px",
-          alignItems: "center",
-        }}
-      >
+      <form onSubmit={handleSearch} style={homeSearchForm}>
         <input
           type="text"
           placeholder="Пошук відео за назвою або тегами..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            flex: 1,
-            maxWidth: "500px",
-            padding: "10px 15px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            fontSize: "16px",
-          }}
+          style={homeSearchInput}
         />
         <button
           type="submit"
-          style={{
-            padding: "10px 20px",
-            borderRadius: "4px",
-            border: "none",
-            cursor: "pointer",
-            backgroundColor: "#6441A5",
-            color: "#fff",
-            fontWeight: "600",
-          }}
+          style={homeSearchButton}
         >
           Пошук
         </button>
@@ -200,7 +167,7 @@ export default function HomePage({ user }) {
         </p>
       )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
+      <div style={homeVideosGrid}>
         {videos.map((v) => (
           <VideoCard key={v.video_id} video={v} onClick={handleVideoClick} />
         ))}

@@ -13,6 +13,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { ChatProvider } from "./context/chatContext";
 import FloatingChatButton from "./features/components/FloatingChatButton";
 import ChatWindow from "./features/components/ChatWindow";
+import LandingPage from "./pages/LandingPage";
 
 // Компонент для умовного відображення чату
 function ChatComponents({ user }) {
@@ -70,17 +71,17 @@ export default function App() {
 
                 <Routes>
                     <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
-                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/register" element={<RegisterPage onRegister={(u) => setUser(u)} />} />
                     <Route path="/profile/:userId" element={<ProfilePage />} />
                     {/* ВИПРАВЛЕНО: видалено непотрібні пропси */}
                     <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" replace />} />
                     <Route path="/live" element={<LivePage />} />
                     <Route path="/upload" element={<UploadVideoPage />} />
-                    <Route path="/" element={user ? <HomePage user={user} /> : <Navigate to="/login" replace />} />
+                    <Route path="/" element={user ? <HomePage user={user} /> : <LandingPage />} />
                     <Route path="/password-reset" element={<ForgotPasswordPage />} />
                     <Route path="/password-reset/verify" element={<VerifyCodePage />} />
                     <Route path="/password-reset/new-password" element={<ResetPasswordPage />} />
-                    <Route path="*" element={<Navigate to="/login" replace />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
                 
                 {/* ВИПРАВЛЕНО: використання useLocation через компонент */}
