@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LoginForm from "../features/components/LoginForm";
-import { loginForgotButton } from "../styles/LoginPageStyles";
+import "../styles/LoginPage.css";
 
 export default function LoginPage({ onLogin }) {
   const [error, setError] = useState(null);
@@ -21,7 +21,7 @@ export default function LoginPage({ onLogin }) {
         <button
           type="button"
           onClick={() => navigate("/password-reset")}
-          style={loginForgotButton}
+          className="login-forgot-btn"
         >
           Забули пароль?
         </button>

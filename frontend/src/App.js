@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LivePage from "./pages/LivePage";
+import SettingsPage from "./pages/SettingsPage";
 import { authService } from "./services/authService";
 import UploadVideoPage from "./pages/UploadVideoPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -13,21 +14,33 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { ChatProvider } from "./context/chatContext";
 import FloatingChatButton from "./features/components/FloatingChatButton";
 import ChatWindow from "./features/components/ChatWindow";
+import NavBar from "./components/NavBar";
 import LandingPage from "./pages/LandingPage";
 
-// Компонент для умовного відображення чату
+const AUTH_PATHS = ["/login", "/register", "/password-reset"];
+
+function isAuthPath(pathname) {
+    return AUTH_PATHS.some((path) => pathname.startsWith(path));
+}
+
 function ChatComponents({ user }) {
     const location = useLocation();
-    const hideChat = ["/login", "/register", "/password-reset"].some(path => 
-        location.pathname.includes(path)
-    );
-
-    if (!user || hideChat) return null;
-
+    if (!user || isAuthPath(location.pathname)) return null;
     return (
         <>
             <FloatingChatButton />
             <ChatWindow />
+        </>
+    );
+}
+
+function LayoutWithNav({ user, children }) {
+    const location = useLocation();
+    const showNav = user && !isAuthPath(location.pathname);
+    return (
+        <>
+            {showNav && <NavBar user={user} />}
+            {children}
         </>
     );
 }
@@ -44,47 +57,22 @@ export default function App() {
     return (
         <ChatProvider>
             <Router>
-                <header className="app-header">
-                    <nav>
-                        <Link to="/">Home</Link>
-                        <Link to="/live">Live</Link>
-                        {user ? (
-                            <>
-                                <Link to="/profile">Profile</Link>
-                                <button
-                                    onClick={() => {
-                                        authService.logout();
-                                        setUser(null);
-                                    }}
-                                >
-                                    Logout
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <Link to="/login">Login</Link>
-                                <Link to="/register">Register</Link>
-                            </>
-                        )}
-                    </nav>
-                </header>
-
-                <Routes>
-                    <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
-                    <Route path="/register" element={<RegisterPage onRegister={(u) => setUser(u)} />} />
-                    <Route path="/profile/:userId" element={<ProfilePage />} />
-                    {/* ВИПРАВЛЕНО: видалено непотрібні пропси */}
-                    <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" replace />} />
-                    <Route path="/live" element={<LivePage />} />
-                    <Route path="/upload" element={<UploadVideoPage />} />
-                    <Route path="/" element={user ? <HomePage user={user} /> : <LandingPage />} />
-                    <Route path="/password-reset" element={<ForgotPasswordPage />} />
-                    <Route path="/password-reset/verify" element={<VerifyCodePage />} />
-                    <Route path="/password-reset/new-password" element={<ResetPasswordPage />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-                
-                {/* ВИПРАВЛЕНО: використання useLocation через компонент */}
+                <LayoutWithNav user={user}>
+                    <Routes>
+                        <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
+                        <Route path="/register" element={<RegisterPage onRegister={(u) => setUser(u)} />} />
+                        <Route path="/profile/:userId" element={<ProfilePage />} />
+                        <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" replace />} />
+                        <Route path="/settings" element={user ? <SettingsPage onProfileUpdate={setUser} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} />
+                        <Route path="/live" element={<LivePage />} />
+                        <Route path="/upload" element={<UploadVideoPage />} />
+                        <Route path="/" element={user ? <HomePage user={user} /> : <LandingPage />} />
+                        <Route path="/password-reset" element={<ForgotPasswordPage />} />
+                        <Route path="/password-reset/verify" element={<VerifyCodePage />} />
+                        <Route path="/password-reset/new-password" element={<ResetPasswordPage />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </LayoutWithNav>
                 <ChatComponents user={user} />
             </Router>
         </ChatProvider>

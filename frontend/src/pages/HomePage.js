@@ -2,18 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchAPI } from "../services/api";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
-import {
-  homeContainer,
-  homeHeaderRow,
-  homeHeaderTitle,
-  homeHeaderButtons,
-  homeSearchForm,
-  homeSearchInput,
-  homeSearchButton,
-  homeVideosGrid,
-  homeToggleButtonBase,
-  homeClearSearchButton,
-} from "../styles/HomePageStyles";
+import "../styles/HomePage.css";
 
 export default function HomePage({ user }) {
   const [videos, setVideos] = useState([]);
@@ -89,9 +78,9 @@ export default function HomePage({ user }) {
   };
 
   return (
-    <div style={homeContainer}>
-      <div style={homeHeaderRow}>
-        <h1 style={homeHeaderTitle}>
+    <div className="home-container">
+      <div className="home-header-row">
+        <h1 className="home-header-title">
           {isSearching
             ? `Результати пошуку: "${searchQuery}"`
             : feedType === "subscriptions"
@@ -99,29 +88,20 @@ export default function HomePage({ user }) {
             : "Рекомендації"}
         </h1>
 
-        <div style={homeHeaderButtons}>
+        <div className="home-header-buttons">
           {user && !isSearching && (
             <>
               <button
+                type="button"
                 onClick={() => setFeedType("all")}
-                style={{
-                  ...homeToggleButtonBase,
-                  backgroundColor: feedType === "all" ? "#6441A5" : "#eee",
-                  color: feedType === "all" ? "#fff" : "#333",
-                  fontWeight: feedType === "all" ? "600" : "400",
-                }}
+                className={`home-toggle-btn ${feedType === "all" ? "active" : ""}`}
               >
                 Всі відео
               </button>
               <button
+                type="button"
                 onClick={() => setFeedType("subscriptions")}
-                style={{
-                  ...homeToggleButtonBase,
-                  backgroundColor:
-                    feedType === "subscriptions" ? "#6441A5" : "#eee",
-                  color: feedType === "subscriptions" ? "#fff" : "#333",
-                  fontWeight: feedType === "subscriptions" ? "600" : "400",
-                }}
+                className={`home-toggle-btn ${feedType === "subscriptions" ? "active" : ""}`}
               >
                 Підписки
               </button>
@@ -129,8 +109,9 @@ export default function HomePage({ user }) {
           )}
           {isSearching && (
             <button
+              type="button"
               onClick={handleClearSearch}
-              style={homeClearSearchButton}
+              className="home-clear-search-btn"
             >
               Очистити пошук
             </button>
@@ -138,19 +119,15 @@ export default function HomePage({ user }) {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <form onSubmit={handleSearch} style={homeSearchForm}>
+      <form onSubmit={handleSearch} className="home-search-form">
         <input
           type="text"
           placeholder="Пошук відео за назвою або тегами..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={homeSearchInput}
+          className="home-search-input"
         />
-        <button
-          type="submit"
-          style={homeSearchButton}
-        >
+        <button type="submit" className="home-search-button">
           Пошук
         </button>
       </form>
@@ -167,7 +144,7 @@ export default function HomePage({ user }) {
         </p>
       )}
 
-      <div style={homeVideosGrid}>
+      <div className="home-videos-grid">
         {videos.map((v) => (
           <VideoCard key={v.video_id} video={v} onClick={handleVideoClick} />
         ))}

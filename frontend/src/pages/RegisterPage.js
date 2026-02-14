@@ -1,25 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
-import {
-    registerContainer,
-    registerStepInfo,
-    registerErrorBox,
-    registerFieldGroup,
-    registerLabel,
-    registerInput,
-    registerCheckboxLabel,
-    registerFieldError,
-    registerStepActions,
-    registerBackButton,
-    registerNextButton,
-    registerPopularWrapper,
-    registerPopularText,
-    registerPopularList,
-    registerPopularItem,
-    registerSkipButton,
-    registerChooseButton,
-} from "../styles/RegisterPageStyles";
+import "../styles/RegisterPage.css";
 
 const popularUsersMock = [
     { id: 1, nickname: "StreamerOne" },
@@ -205,21 +187,17 @@ export default function RegisterPage({ onRegister }) {
     };
 
     return (
-        <div style={registerContainer}>
+        <div className="register-container">
             <h1>Реєстрація</h1>
-            <p style={registerStepInfo}>
+            <p className="register-step-info">
                 Крок {step} з 5
             </p>
 
-            {error && (
-                <div style={registerErrorBox}>
-                    {error}
-                </div>
-            )}
+            {error && <div className="register-error-box">{error}</div>}
 
             {step === 1 && (
-                <div style={registerFieldGroup}>
-                    <label style={registerLabel}>
+                <div className="register-field-group">
+                    <label className="register-label">
                         <span>Email</span>
                         <input
                             type="email"
@@ -227,13 +205,13 @@ export default function RegisterPage({ onRegister }) {
                             onChange={(e) => handleChange("email", e.target.value)}
                             placeholder="example@email.com"
                             required
-                            style={registerInput}
+                            className="register-input"
                         />
                         {fieldErrors.email && (
-                            <span style={registerFieldError}>{fieldErrors.email}</span>
+                            <span className="register-field-error">{fieldErrors.email}</span>
                         )}
                     </label>
-                    <label style={registerCheckboxLabel}>
+                    <label className="register-checkbox-label">
                         <input
                             type="checkbox"
                             checked={formData.policyAccepted}
@@ -247,8 +225,8 @@ export default function RegisterPage({ onRegister }) {
             )}
 
             {step === 2 && (
-                <div style={registerFieldGroup}>
-                    <label style={registerLabel}>
+                <div className="register-field-group">
+                    <label className="register-label">
                         <span>Створіть пароль</span>
                         <input
                             type="password"
@@ -257,18 +235,18 @@ export default function RegisterPage({ onRegister }) {
                             placeholder="Мінімум 6 символів"
                             required
                             minLength={6}
-                            style={registerInput}
+                            className="register-input"
                         />
                         {fieldErrors.password && (
-                            <span style={registerFieldError}>{fieldErrors.password}</span>
+                            <span className="register-field-error">{fieldErrors.password}</span>
                         )}
                     </label>
                 </div>
             )}
 
             {step === 3 && (
-                <div style={registerFieldGroup}>
-                    <label style={registerLabel}>
+                <div className="register-field-group">
+                    <label className="register-label">
                         <span>Нікнейм</span>
                         <input
                             type="text"
@@ -276,39 +254,39 @@ export default function RegisterPage({ onRegister }) {
                             onChange={(e) => handleChange("nickname", e.target.value)}
                             placeholder="Введіть ваш нікнейм"
                             required
-                            style={registerInput}
+                            className="register-input"
                         />
                         {fieldErrors.nickname && (
-                            <span style={registerFieldError}>{fieldErrors.nickname}</span>
+                            <span className="register-field-error">{fieldErrors.nickname}</span>
                         )}
                     </label>
                 </div>
             )}
 
             {step === 4 && (
-                <div style={registerFieldGroup}>
-                    <label style={registerLabel}>
+                <div className="register-field-group">
+                    <label className="register-label">
                         <span>Дата народження</span>
                         <input
                             type="date"
                             value={formData.birthday}
                             onChange={(e) => handleChange("birthday", e.target.value)}
                             required
-                            style={registerInput}
+                            className="register-input"
                         />
                         {fieldErrors.birthday && (
-                            <span style={registerFieldError}>{fieldErrors.birthday}</span>
+                            <span className="register-field-error">{fieldErrors.birthday}</span>
                         )}
                     </label>
                 </div>
             )}
 
             {step === 5 && (
-                <div style={registerPopularWrapper}>
-                    <p style={registerPopularText}>
+                <div className="register-popular-wrapper">
+                    <p className="register-popular-text">
                         Підпишіться на найпопулярніших користувачів або пропустіть цей крок.
                     </p>
-                    <div style={registerPopularList}>
+                    <div className="register-popular-list">
                         {popularUsersMock.map((u) => {
                             const selected = formData.selectedUserIds.includes(u.id);
                             return (
@@ -316,7 +294,7 @@ export default function RegisterPage({ onRegister }) {
                                     key={u.id}
                                     type="button"
                                     onClick={() => toggleUserSelection(u.id)}
-                                    style={registerPopularItem(selected)}
+                                    className={`register-popular-item ${selected ? "selected" : ""}`}
                                 >
                                     {u.nickname}
                                 </button>
@@ -326,13 +304,13 @@ export default function RegisterPage({ onRegister }) {
                 </div>
             )}
 
-            <div style={registerStepActions(step === 1)}>
+            <div className={`register-step-actions ${step === 1 ? "register-step-actions--first" : ""}`}>
                 {step > 1 && step < 5 && (
                     <button
                         type="button"
                         onClick={() => setStep((s) => Math.max(1, s - 1))}
                         disabled={loading}
-                        style={registerBackButton}
+                        className="register-back-btn"
                     >
                         Назад
                     </button>
@@ -343,26 +321,18 @@ export default function RegisterPage({ onRegister }) {
                         type="button"
                         onClick={handleNext}
                         disabled={loading}
-                        style={registerNextButton(!loading)}
+                        className="register-next-btn"
                     >
                         {loading ? "Зачекайте..." : "Далі"}
                     </button>
                 )}
 
                 {step === 5 && (
-                    <div style={{ display: "flex", gap: "10px", marginLeft: "auto" }}>
-                        <button
-                            type="button"
-                            onClick={handleFinish}
-                            style={registerSkipButton}
-                        >
+                    <div className="register-step-actions-finish">
+                        <button type="button" onClick={handleFinish} className="register-skip-btn">
                             Пропустити
                         </button>
-                        <button
-                            type="button"
-                            onClick={handleFinish}
-                            style={registerChooseButton}
-                        >
+                        <button type="button" onClick={handleFinish} className="register-choose-btn">
                             Обрати
                         </button>
                     </div>
