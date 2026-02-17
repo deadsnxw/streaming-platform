@@ -97,19 +97,50 @@
 }
 
 .register-popular-item {
-  padding: 6px 12px;
+  padding: 8px 10px;
   border-radius: 999px;
   border: 1px solid #ccc;
   background-color: #fff;
   color: #333;
   cursor: pointer;
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .register-popular-item.selected {
   border-color: #6441A5;
   background-color: #6441A5;
   color: #fff;
+}
+
+.register-popular-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: #eee;
+}
+
+.register-popular-avatar--placeholder {
+  display: inline-block;
+}
+
+.register-popular-nickname {
+  white-space: nowrap;
+}
+
+.register-popular-loading,
+.register-popular-error,
+.register-popular-empty {
+  font-size: 14px;
+  color: #555;
+}
+
+.register-popular-error {
+  color: #a00;
 }
 
 .register-skip-btn {

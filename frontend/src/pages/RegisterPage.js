@@ -1,14 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
+import { fetchAPI, getUploadsBaseUrl } from "../services/api";
 import "../styles/RegisterPage.css";
-
-const popularUsersMock = [
-    { id: 1, nickname: "StreamerOne" },
-    { id: 2, nickname: "GamerPro" },
-    { id: 3, nickname: "MusicLover" },
-    { id: 4, nickname: "ProCoder" },
-];
 
 export default function RegisterPage({ onRegister }) {
     const [step, setStep] = useState(1);
@@ -28,6 +22,9 @@ export default function RegisterPage({ onRegister }) {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [popularUsers, setPopularUsers] = useState([]);
+    const [popularLoading, setPopularLoading] = useState(false);
+    const [popularError, setPopularError] = useState(null);
     const navigate = useNavigate();
 
     const handleChange = (field, value) => {
@@ -182,7 +179,46 @@ export default function RegisterPage({ onRegister }) {
         }
     };
 
-    const handleFinish = () => {
+    useEffect(() => {
+        const loadPopular = async () => {
+            setPopularError(null);
+            setPopularLoading(true);
+            try {
+                const users = await fetchAPI("/users/recommended?limit=10", { method: "GET" });
+                setPopularUsers(Array.isArray(users) ? users : []);
+            } catch (e) {
+                setPopularUsers([]);
+                setPopularError("Не вдалося завантажити рекомендації.");
+            } finally {
+                setPopularLoading(false);
+            }
+        };
+
+        if (step === 5) {
+            loadPopular();
+        }
+    }, [step]);
+
+    const handleFinish = async (doSubscribe) => {
+        if (doSubscribe && formData.selectedUserIds.length > 0) {
+            try {
+                setLoading(true);
+                await Promise.all(
+                    formData.selectedUserIds.map((channelId) =>
+                        fetchAPI("/subscriptions/subscribe", {
+                            method: "POST",
+                            body: { channelId },
+                        })
+                    )
+                );
+            } catch (e) {
+                // don't block navigation, but show error briefly
+                setError("Не вдалося підписатися на деяких користувачів. Спробуйте пізніше.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
         navigate("/");
     };
 
@@ -287,16 +323,32 @@ export default function RegisterPage({ onRegister }) {
                         Підпишіться на найпопулярніших користувачів або пропустіть цей крок.
                     </p>
                     <div className="register-popular-list">
-                        {popularUsersMock.map((u) => {
-                            const selected = formData.selectedUserIds.includes(u.id);
+                        {popularLoading && <div className="register-popular-loading">Завантаження…</div>}
+                        {popularError && <div className="register-popular-error">{popularError}</div>}
+                        {!popularLoading && !popularError && popularUsers.length === 0 && (
+                            <div className="register-popular-empty">Наразі немає рекомендацій.</div>
+                        )}
+
+                        {popularUsers.map((u) => {
+                            const selected = formData.selectedUserIds.includes(u.user_id);
+                            const avatarSrc = u.avatar_url ? getUploadsBaseUrl() + u.avatar_url : null;
                             return (
                                 <button
-                                    key={u.id}
+                                    key={u.user_id}
                                     type="button"
-                                    onClick={() => toggleUserSelection(u.id)}
+                                    onClick={() => toggleUserSelection(u.user_id)}
                                     className={`register-popular-item ${selected ? "selected" : ""}`}
                                 >
-                                    {u.nickname}
+                                    {avatarSrc ? (
+                                        <img
+                                            src={avatarSrc}
+                                            alt=""
+                                            className="register-popular-avatar"
+                                        />
+                                    ) : (
+                                        <div className="register-popular-avatar register-popular-avatar--placeholder" />
+                                    )}
+                                    <span className="register-popular-nickname">{u.nickname}</span>
                                 </button>
                             );
                         })}
@@ -329,11 +381,11 @@ export default function RegisterPage({ onRegister }) {
 
                 {step === 5 && (
                     <div className="register-step-actions-finish">
-                        <button type="button" onClick={handleFinish} className="register-skip-btn">
+                        <button type="button" onClick={() => handleFinish(false)} className="register-skip-btn" disabled={loading}>
                             Пропустити
                         </button>
-                        <button type="button" onClick={handleFinish} className="register-choose-btn">
-                            Обрати
+                        <button type="button" onClick={() => handleFinish(true)} className="register-choose-btn" disabled={loading}>
+                            {loading ? "Зачекайте..." : "Підписатися"}
                         </button>
                     </div>
                 )}
