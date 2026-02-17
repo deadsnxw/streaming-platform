@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { fetchAPI } from "../services/api";
+import { fetchAPI, getUploadsBaseUrl } from "../services/api";
 import { useNavigate, useParams } from "react-router-dom";
 import { authService } from "../services/authService";
 import { useChat } from "../context/chatContext";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
 import VideoEditModal from "../features/components/VideoEditModal";
+import "../styles/ProfilePage.css";
+
+const BIO_TRUNCATE_LENGTH = 150;
 
 const ProfilePage = () => {
     const { userId } = useParams();
@@ -14,9 +17,6 @@ const ProfilePage = () => {
 
     // Отримуємо currentUser один раз
     const [currentUser] = useState(() => authService.getCurrentUser());
-
-    console.log("ProfilePage userId:", userId, "type:", typeof userId);
-    console.log("Current user:", currentUser);
 
     // ВИПРАВЛЕНО: правильна перевірка
     const isOwnProfile = !userId || 
@@ -30,6 +30,7 @@ const ProfilePage = () => {
 
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
+    const [bioExpanded, setBioExpanded] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -37,22 +38,19 @@ const ProfilePage = () => {
                 setLoading(true);
 
                 if (isOwnProfile) {
-                    // Завантаження власних відео
-                    const data = await fetchAPI("/videos/me", { method: "GET" });
-                    console.log("My videos response:", data);
-                    
-                    if (Array.isArray(data)) {
-                        setVideos(data);
-                    } else if (data.videos && Array.isArray(data.videos)) {
-                        setVideos(data.videos);
+                    // Завантаження власних відео та повного профілю (аватар, біо)
+                    const [videosRes, meRes] = await Promise.all([
+                        fetchAPI("/videos/me", { method: "GET" }),
+                        fetchAPI("/users/me", { method: "GET" }),
+                    ]);
+                    if (Array.isArray(videosRes)) {
+                        setVideos(videosRes);
+                    } else if (videosRes?.videos) {
+                        setVideos(videosRes.videos);
                     } else {
                         setVideos([]);
                     }
-
-                    // Використовуємо дані поточного користувача
-                    if (currentUser) {
-                        setUserInfo(currentUser);
-                    }
+                    if (meRes) setUserInfo(meRes);
                 } else {
                     // Завантаження відео іншого користувача
                     const data = await fetchAPI(`/videos/user/${userId}`, { method: "GET" });
@@ -88,9 +86,6 @@ const ProfilePage = () => {
             } catch (err) {
                 console.error("Failed to fetch data", err);
                 setVideos([]);
-                if (isOwnProfile && currentUser) {
-                    setUserInfo(currentUser);
-                }
             } finally {
                 setLoading(false);
             }
@@ -176,53 +171,77 @@ const ProfilePage = () => {
     };
 
     if (loading) {
-        return <p style={{ padding: "20px" }}>Завантаження...</p>;
+        return <p className="profile-loading">Завантаження...</p>;
     }
 
+    const bio = userInfo?.bio || "";
+    const showBioExpand = bio.length > BIO_TRUNCATE_LENGTH;
+    const bioDisplay = showBioExpand && !bioExpanded
+        ? bio.slice(0, BIO_TRUNCATE_LENGTH) + "…"
+        : bio;
+    const avatarSrc = userInfo?.avatar_url
+        ? getUploadsBaseUrl() + userInfo.avatar_url
+        : null;
+
     return (
-        <div style={{ padding: "20px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    <h1>
-                        {isOwnProfile
-                            ? "Мій профіль"
-                            : userInfo?.nickname || "Профіль користувача"}
-                    </h1>
-                    {userInfo?.bio && (
-                        <p style={{ color: "#666", marginTop: 5 }}>{userInfo.bio}</p>
+        <div className="profile-page">
+            <div className="profile-header">
+                <div className="profile-header-left">
+                    {avatarSrc ? (
+                        <img src={avatarSrc} alt="" className="profile-avatar" />
+                    ) : (
+                        <div className="profile-avatar-placeholder">?</div>
                     )}
+                    <div className="profile-title-block">
+                        <h1>
+                            {isOwnProfile
+                                ? "Мій профіль"
+                                : userInfo?.nickname || "Профіль користувача"}
+                        </h1>
+                        {bio && (
+                            <>
+                                <p className="profile-bio">{bioDisplay}</p>
+                                {showBioExpand && (
+                                    <button
+                                        type="button"
+                                        className="profile-bio-expand"
+                                        onClick={() => setBioExpanded((e) => !e)}
+                                    >
+                                        {bioExpanded ? "Згорнути" : "Більше"}
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className="profile-actions">
                     {isOwnProfile && (
-                        <button
-                            onClick={() => navigate("/upload")}
-                            style={{
-                                padding: "10px 20px",
-                                backgroundColor: "#6441A5",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "5px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            Завантажити відео
-                        </button>
+                        <>
+                            <button
+                                type="button"
+                                className="profile-btn profile-btn-secondary"
+                                onClick={() => navigate("/settings")}
+                            >
+                                Налаштування
+                            </button>
+                            <button
+                                type="button"
+                                className="profile-btn profile-btn-primary"
+                                onClick={() => navigate("/upload")}
+                            >
+                                Завантажити відео
+                            </button>
+                        </>
                     )}
 
                     {!isOwnProfile && currentUser && (
                         <>
                             <button
+                                type="button"
+                                className="profile-btn profile-btn-subscribe"
                                 onClick={handleToggleSubscribe}
                                 disabled={subscribing}
-                                style={{
-                                    padding: "10px 20px",
-                                    backgroundColor: isSubscribed ? "#ccc" : "#e60073",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "5px",
-                                    cursor: subscribing ? "default" : "pointer",
-                                }}
                             >
                                 {subscribing
                                     ? "..."
@@ -230,20 +249,10 @@ const ProfilePage = () => {
                                     ? "Відписатися"
                                     : "Підписатися"}
                             </button>
-
                             <button
+                                type="button"
+                                className="profile-btn profile-btn-primary"
                                 onClick={handleStartChat}
-                                style={{
-                                    padding: "10px 20px",
-                                    backgroundColor: "#6441A5",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "5px",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "5px",
-                                }}
                             >
                                 💬 Написати
                             </button>
@@ -252,18 +261,18 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            <h2 style={{ marginTop: 30, marginBottom: 15 }}>
+            <h2 className="profile-videos-title">
                 Відео {videos.length > 0 && `(${videos.length})`}
             </h2>
 
             {videos.length === 0 ? (
-                <p style={{ color: "#999", textAlign: "center", padding: "40px 0" }}>
+                <p className="profile-videos-empty">
                     {isOwnProfile
                         ? "У вас ще немає завантажених відео"
                         : "Користувач ще не завантажив жодного відео"}
                 </p>
             ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
+                <div className="profile-videos-grid">
                     {videos.map((v) => (
                         <VideoCard
                             key={v.video_id}

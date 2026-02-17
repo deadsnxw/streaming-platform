@@ -6,6 +6,8 @@ import {
 import {
   findUserByEmailOrNickname,
   createUser,
+  findUserByEmail,
+  findUserByNickname,
 } from "../db/user.repository.js";
 
 export const register = async (req, res) => {
@@ -22,9 +24,14 @@ export const register = async (req, res) => {
         .json({ message: "Password must be at least 6 characters" });
     }
 
-    const exists = await findUserByEmailOrNickname(email);
-    if (exists) {
-      return res.status(400).json({ message: "User already exists" });
+    const existingByEmail = await findUserByEmail(email);
+    if (existingByEmail) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const existingByNickname = await findUserByNickname(nickname);
+    if (existingByNickname) {
+      return res.status(400).json({ message: "Nickname already exists" });
     }
 
     const passwordHash = await hashPassword(password);
@@ -56,6 +63,42 @@ export const register = async (req, res) => {
     res
       .status(500)
       .json({ message: "Registration failed", error: error.message });
+  }
+};
+
+export const checkEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const existingByEmail = await findUserByEmail(email);
+    return res.json({ exists: !!existingByEmail });
+  } catch (error) {
+    console.error("Check email error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to check email", error: error.message });
+  }
+};
+
+export const checkNickname = async (req, res) => {
+  try {
+    const { nickname } = req.body;
+
+    if (!nickname) {
+      return res.status(400).json({ message: "Nickname is required" });
+    }
+
+    const existingByNickname = await findUserByNickname(nickname);
+    return res.json({ exists: !!existingByNickname });
+  } catch (error) {
+    console.error("Check nickname error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to check nickname", error: error.message });
   }
 };
 

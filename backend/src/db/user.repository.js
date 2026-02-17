@@ -10,6 +10,26 @@ export const findUserByEmailOrNickname = async (login) => {
     return rows[0];
 };
 
+export const findUserByEmail = async (email) => {
+    const { rows } = await pool.query(
+        `SELECT * FROM users 
+         WHERE email = $1
+         LIMIT 1`,
+        [email]
+    );
+    return rows[0];
+};
+
+export const findUserByNickname = async (nickname) => {
+    const { rows } = await pool.query(
+        `SELECT * FROM users 
+         WHERE nickname = $1
+         LIMIT 1`,
+        [nickname]
+    );
+    return rows[0];
+};
+
 export const getAllUsers = async () => {
     const { rows } = await pool.query(
         `SELECT 
@@ -24,6 +44,33 @@ export const getAllUsers = async () => {
          WHERE u.is_active = true
          GROUP BY u.user_id`
     );
+    return rows;
+};
+
+export const getRecommendedUsersForSubscriber = async (subscriberId, limit = 10) => {
+    const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 10, 10)); // hard cap at 10
+
+    const { rows } = await pool.query(
+        `SELECT 
+            u.user_id,
+            u.nickname,
+            u.avatar_url,
+            COALESCE(COUNT(s.subscription_id), 0) as subscriber_count
+         FROM users u
+         LEFT JOIN subscriptions s ON u.user_id = s.channel_id
+         WHERE u.is_active = true
+           AND u.user_id <> $1
+           AND NOT EXISTS (
+              SELECT 1
+              FROM subscriptions s2
+              WHERE s2.subscriber_id = $1 AND s2.channel_id = u.user_id
+           )
+         GROUP BY u.user_id
+         ORDER BY subscriber_count DESC, u.user_id DESC
+         LIMIT $2`,
+        [subscriberId, safeLimit]
+    );
+
     return rows;
 };
 
@@ -47,6 +94,10 @@ export const getUserById = async (id) => {
 };
 
 export const updateUser = async (id, data) => {
+    if (!data || Object.keys(data).length === 0) {
+        return await getUserById(id);
+    }
+
     const fields = [];
     const values = [];
     let idx = 1;

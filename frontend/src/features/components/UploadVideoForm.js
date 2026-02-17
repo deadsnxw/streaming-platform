@@ -4,6 +4,7 @@ import { fetchAPI } from '../../services/api';
 const UploadVideoForm = ({ onUploadSuccess }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [tags, setTags] = useState('');
     const [file, setFile] = useState(null);
     const [thumbnail, setThumbnail] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -21,6 +22,9 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
         formData.append('video', file);
         formData.append('title', title);
         formData.append('description', description);
+        if (tags.trim()) {
+            formData.append('tags', tags);
+        }
         if (thumbnail) {
             formData.append('thumbnail', thumbnail);
         }
@@ -37,6 +41,7 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
             onUploadSuccess(data.video);
             setTitle('');
             setDescription('');
+            setTags('');
             setFile(null);
             setThumbnail(null);
         } catch (err) {
@@ -63,6 +68,13 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 style={{ display: 'block', marginBottom: '10px', width: '300px', height: '80px' }}
+            />
+            <input
+                type="text"
+                placeholder="Теги (через кому, наприклад: FPS, MOBA, talk)"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                style={{ display: 'block', marginBottom: '10px', width: '300px' }}
             />
             <input
                 type="file"

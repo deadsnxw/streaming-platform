@@ -5,6 +5,7 @@ import { fetchAPI } from '../services/api';
 const UploadVideoPage = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [tags, setTags] = useState('');
     const [file, setFile] = useState(null);
     const [thumbnail, setThumbnail] = useState(null);
     const [error, setError] = useState('');
@@ -24,6 +25,9 @@ const UploadVideoPage = () => {
         formData.append('video', file);
         formData.append('title', title);
         formData.append('description', description);
+        if (tags.trim()) {
+            formData.append('tags', tags);
+        }
         if (thumbnail) {
             formData.append('thumbnail', thumbnail);
         }
@@ -92,6 +96,27 @@ const UploadVideoPage = () => {
                         }}
                         placeholder="Опишіть ваше відео (опціонально)"
                     />
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                        Теги (опціонально):
+                    </label>
+                    <input
+                        type="text"
+                        value={tags}
+                        onChange={(e) => setTags(e.target.value)}
+                        style={{ 
+                            width: '100%', 
+                            padding: '10px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            fontSize: '14px'
+                        }}
+                        placeholder="Введіть теги через кому (наприклад: FPS, MOBA, talk)"
+                    />
+                    <p style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                        Теги допоможуть іншим користувачам знайти ваше відео
+                    </p>
                 </div>
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>

@@ -8,7 +8,8 @@ import {
     incrementViewCount,
     updateVideo,
     deleteVideo,
-    recordVideoView
+    recordVideoView,
+    searchVideos
 } from '../db/video.repository.js';
 
 export const watchVideo = async (req, res) => {
@@ -74,7 +75,7 @@ export const uploadVideo = async (req, res) => {
             return res.status(400).json({ message: 'No video file uploaded' });
         }
 
-        const { title, description, isPublic } = req.body;
+        const { title, description, isPublic, tags } = req.body;
 
         if (!title) {
             return res.status(400).json({ message: 'Title is required' });
@@ -91,6 +92,16 @@ export const uploadVideo = async (req, res) => {
         const videoUrl = `${baseUrl}/uploads/videos/${videoFile.filename}`;
         const thumbnailUrl = thumbnailFile ? `${baseUrl}/uploads/thumbnails/${thumbnailFile.filename}` : null;
 
+        // Parse tags from request body (can be comma-separated string or array)
+        let tagArray = [];
+        if (tags) {
+            if (typeof tags === 'string') {
+                tagArray = tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+            } else if (Array.isArray(tags)) {
+                tagArray = tags.map(t => typeof t === 'string' ? t.trim() : String(t).trim()).filter(t => t.length > 0);
+            }
+        }
+
         const video = await createVideo({
             userId: userId,
             title,
@@ -99,7 +110,8 @@ export const uploadVideo = async (req, res) => {
             thumbnailUrl,
             duration: null,
             fileSize: videoFile.size,
-            mimeType: videoFile.mimetype
+            mimeType: videoFile.mimetype,
+            tags: tagArray
         });
 
         res.status(201).json({
@@ -316,5 +328,33 @@ export const recordWatch = async (req, res) => {
     } catch (error) {
         console.error('Record watch error:', error);
         res.status(500).json({ message: 'Failed to record watch', error: error.message });
+    }
+};
+
+export const searchVideosController = async (req, res) => {
+    try {
+        const { q, limit = 20, offset = 0 } = req.query;
+
+        if (!q || q.trim().length === 0) {
+            // If no search query, return all public videos
+            const videos = await getAllPublicVideos(parseInt(limit), parseInt(offset));
+            return res.json({
+                videos,
+                limit: parseInt(limit),
+                offset: parseInt(offset)
+            });
+        }
+
+        const videos = await searchVideos(q.trim(), parseInt(limit), parseInt(offset));
+
+        res.json({
+            videos,
+            query: q.trim(),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+    } catch (error) {
+        console.error('Search videos error:', error);
+        res.status(500).json({ message: 'Failed to search videos', error: error.message });
     }
 };

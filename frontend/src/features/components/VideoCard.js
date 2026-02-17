@@ -162,6 +162,46 @@ const VideoCard = ({ video, isOwner, onClick, onEdit, onDelete }) => {
       <p style={{ fontSize: "12px", color: "#555" }}>
         {video.views_count} views
       </p>
+
+      {/* Tags */}
+      {video.tags && video.tags.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "4px",
+            marginTop: "8px",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {video.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag.tag_id || tag.name}
+              style={{
+                fontSize: "10px",
+                padding: "2px 6px",
+                backgroundColor: "#6441A5",
+                color: "#fff",
+                borderRadius: "3px",
+                display: "inline-block",
+              }}
+            >
+              {tag.name}
+            </span>
+          ))}
+          {video.tags.length > 3 && (
+            <span
+              style={{
+                fontSize: "10px",
+                padding: "2px 6px",
+                color: "#6441A5",
+              }}
+            >
+              +{video.tags.length - 3}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };
