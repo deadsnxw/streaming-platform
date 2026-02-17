@@ -13,22 +13,43 @@ export default function LoginPage({ onLogin }) {
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      {error && <div className="error">{error}</div>}
-      <LoginForm onSuccess={handleSuccess} onError={setError} />
-      <p>
-        <button
-          type="button"
-          onClick={() => navigate("/password-reset")}
-          className="login-forgot-btn"
-        >
-          Забули пароль?
-        </button>
-      </p>
-      <p>
-        Not registered? <Link to="/register">Create an account</Link>
-      </p>
+    <div className="loginContainer"> 
+      <div className="star-background"/>
+      <div className="login-left">
+        
+        <div className="text-content">
+          <h1 className="main-title">
+            Стань<br />
+            частиною<br />
+            живого<br />
+            моменту.
+          </h1>
+          <p className="subtitle">
+            Твій простір для живого відео.<br />
+            Разом із мільйонами однодумців.
+          </p>
+        </div>
+      </div>
+
+      <div className="login-right">
+        {error && <div className="error">{error}</div>}
+        <h1 className="login-right-title">Увійти</h1>
+
+        <LoginForm onSuccess={handleSuccess} onError={setError} />
+
+        <div className="login-actions">
+          <button type="button" className="login-forgot-btn" onClick={() => navigate("/password-reset")}>
+            Забули пароль?
+          </button>
+          <button type="submit" form="login-form" className="submit-btn">
+            Увійти
+          </button>
+        </div>
+
+        <p className="login-register-text">
+          Не маєте акаунту? <Link to="/register">Зареєструватися</Link>
+        </p>
+      </div>
     </div>
   );
 }
