@@ -222,14 +222,14 @@ export default function RegisterPage({ onRegister }) {
       <div className="register-left">
         <div className="register-text-content">
           <h1 className="register-main-title">
-            Створи<br />
-            свій<br />
-            простір<br />
-            сьогодні.
+            Стань<br />
+            частиною<br />
+            живого<br />
+            моменту.
           </h1>
           <p className="register-subtitle">
-            Приєднуйся до спільноти.<br />
-            Діли свої моменти з мільйонами.
+            Твій простір для живого відео.<br />
+            Разом із мільйонами однодумців.
           </p>
         </div>
       </div>

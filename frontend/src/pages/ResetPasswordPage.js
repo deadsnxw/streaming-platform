@@ -20,12 +20,14 @@ export default function ResetPasswordPage() {
       <div className="password-reset-left">
         <div className="password-reset-text-content">
           <h1 className="password-reset-main-title">
-            Майже<br />
-            готово!
+            Стань<br />
+            частиною<br />
+            живого<br />
+            моменту.
           </h1>
           <p className="password-reset-subtitle">
-            Створіть новий надійний пароль<br />
-            для вашого акаунту.
+            Твій простір для живого відео.<br />
+            Разом із мільйонами однодумців.
           </p>
         </div>
       </div>

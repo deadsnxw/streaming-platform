@@ -14,14 +14,14 @@ export default function ForgotPasswordPage() {
       <div className="password-reset-left">
         <div className="password-reset-text-content">
           <h1 className="password-reset-main-title">
-            Відновіть<br />
-            доступ<br />
-            до свого<br />
-            акаунту.
+            Стань<br />
+            частиною<br />
+            живого<br />
+            моменту.
           </h1>
           <p className="password-reset-subtitle">
-            Введіть email і ми надішлемо<br />
-            код для відновлення пароля.
+            Твій простір для живого відео.<br />
+            Разом із мільйонами однодумців.
           </p>
         </div>
       </div>

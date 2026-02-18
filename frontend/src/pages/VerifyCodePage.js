@@ -19,13 +19,14 @@ export default function VerifyCodePage() {
       <div className="password-reset-left">
         <div className="password-reset-text-content">
           <h1 className="password-reset-main-title">
-            Перевірте<br />
-            свою<br />
-            пошту.
+            Стань<br />
+            частиною<br />
+            живого<br />
+            моменту..
           </h1>
           <p className="password-reset-subtitle">
-            Ми надіслали код підтвердження<br />
-            на вашу електронну адресу.
+            Твій простір для живого відео.<br />
+            Разом із мільйонами однодумців.
           </p>
         </div>
       </div>
