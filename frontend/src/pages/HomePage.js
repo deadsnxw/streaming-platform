@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import { fetchAPI } from "../services/api";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
+import LivePlayer from "../features/components/LivePlayer";
 
 export default function HomePage({ user }) {
   const [videos, setVideos] = useState([]);
   const [selectedVideoId, setSelectedVideoId] = useState(null);
-  const [feedType, setFeedType] = useState("all"); // 'all' | 'subscriptions'
+  const [feedType, setFeedType] = useState("all"); 
   const [loading, setLoading] = useState(true);
+  const HLS_URL = process.env.REACT_APP_HLS_URL || "http://localhost:8081/hls/stream.m3u8";
+  const [liveActive, setLiveActive] = useState(false);
 
   const loadVideos = async (type = "all") => {
     try {
@@ -31,6 +34,27 @@ export default function HomePage({ user }) {
   useEffect(() => {
     loadVideos(feedType);
   }, [feedType]);
+
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      try {
+        const res = await fetch(HLS_URL, { method: "HEAD", mode: "cors" });
+        if (!mounted) return;
+        setLiveActive(res.ok);
+      } catch (e) {
+        if (!mounted) return;
+        setLiveActive(false);
+      }
+    };
+
+    check();
+    const id = setInterval(check, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [HLS_URL]);
 
   const handleVideoClick = (video_id) => {
     setSelectedVideoId(video_id);
@@ -115,6 +139,13 @@ export default function HomePage({ user }) {
             handleCloseModal();
           }}
         />
+      )}
+
+      {liveActive && (
+        <div style={{ marginTop: 24 }}>
+          <h2>Прямий ефір</h2>
+          <LivePlayer url={HLS_URL} />
+        </div>
       )}
     </div>
   );

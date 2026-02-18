@@ -32,8 +32,29 @@ services:
     volumes:
       - ./nginx-rtmp/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx-rtmp:/tmp
+      - ./uploads:/opt/data
     networks:
       - app-network
+    restart: unless-stopped
+
+  vod-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vod-worker
+    command: npm run start:vod
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./uploads:/app/uploads
+    environment:
+      - NODE_ENV=development
+      - VOD_POLL_INTERVAL=10000
+    networks:
+      - app-network
+    depends_on:
+      - nginx-rtmp
+      - backend
     restart: unless-stopped
 
   frontend:
