@@ -1,5 +1,6 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ResetPassword from "../features/components/ResetPassword";
+import "../styles/PasswordResetPage.css";
 
 export default function ResetPasswordPage() {
   const location = useLocation();
@@ -13,9 +14,31 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div>
-      <h1>Встановлення нового пароля</h1>
-      <ResetPassword email={email} code={code}/>
+    <div className="passwordResetContainer">
+      <div className="password-reset-star-background" />
+
+      <div className="password-reset-left">
+        <div className="password-reset-text-content">
+          <h1 className="password-reset-main-title">
+            Майже<br />
+            готово!
+          </h1>
+          <p className="password-reset-subtitle">
+            Створіть новий надійний пароль<br />
+            для вашого акаунту.
+          </p>
+        </div>
+      </div>
+
+      <div className="password-reset-right">
+        <h1 className="password-reset-right-title">Новий пароль</h1>
+        
+        <ResetPassword email={email} code={code} />
+
+        <p className="password-reset-back-text">
+          <Link to="/login">Повернутися до входу</Link>
+        </p>
+      </div>
     </div>
   );
 }
