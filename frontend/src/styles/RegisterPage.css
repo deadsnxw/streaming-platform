@@ -1,168 +1,368 @@
-.register-container {
-  max-width: 480px;
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
+
+.registerContainer {
+  min-height: 100vh;
+  width: 100vw;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  font-family: 'HelveticaNeueCyr', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #FAFAFA;
+  overflow: hidden;
+}
+
+/* ─── Star Background ─────────────────────────────────────────────────────── */
+
+.register-star-background {
+  position: absolute;
+  top: -250px;
+  left: -257px;
+  width: 1720px;
+  height: 1479px;
+  background-image: url('../../public/star.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+  filter: contrast(1.1) saturate(1.1);
+}
+
+/* ─── Left Panel ──────────────────────────────────────────────────────────── */
+
+.register-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  padding: 60px 60px 60px 100px;
+  z-index: 1;
+}
+
+.register-text-content {
+  position: relative;
+  z-index: 2;
+  max-width: 652px;
+  margin-left: 60px;
+}
+
+.register-main-title {
+  font-size: 64px;
+  font-weight: 500;
+  color: #0C0C0C;
+  line-height: 1.1;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.5px;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+}
+
+.register-subtitle {
+  font-size: 24px;
+  font-weight: 400;
+  color: #6b6b6b;
+  line-height: 1.6;
+  margin: 0;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+}
+
+/* ─── Right Panel ─────────────────────────────────────────────────────────── */
+
+.register-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  gap: 16px;
+  min-width: 600px;
+  border: 2px solid #0C0C0C;
+  border-radius: 15px 0 0 15px;
+  background-color: #0C0C0C;
+  box-sizing: border-box;
+}
+
+.register-right-title {
+  font-family: 'HelveticaNeueCyr', sans-serif;
+  color: #FAFAFA;
+  font-weight: 500;
+  font-size: 46px;
+  margin: 0;
+  align-self: center;
 }
 
 .register-step-info {
-  margin-top: 0;
-  color: #555;
+  color: #888;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  font-family: 'HelveticaNeueCyr', sans-serif;
 }
 
-.register-error-box {
-  margin-bottom: 12px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  background-color: #ffe5e5;
-  color: #a00;
+/* ─── Error ───────────────────────────────────────────────────────────────── */
+
+.register-error {
+  width: 100%;
+  padding: 12px 16px;
+  background: #2a1010;
+  border: 1px solid #ff4444;
+  border-radius: 10px;
+  color: #ff6b6b;
+  font-size: 14px;
+  box-sizing: border-box;
 }
 
-.register-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+/* ─── Step Content ────────────────────────────────────────────────────────── */
 
-.register-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.register-input {
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.register-checkbox-label {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.register-field-error {
-  color: #a00;
-  font-size: 13px;
-}
-
-.register-step-actions {
-  margin-top: 24px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.register-step-actions.register-step-actions--first {
-  justify-content: flex-end;
-}
-
-.register-back-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  cursor: pointer;
-}
-
-.register-next-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  background-color: #6441A5;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.register-next-btn:disabled {
-  background-color: #ccc;
-  cursor: default;
-}
-
-.register-popular-wrapper {
+.register-step-content {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+.register-form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.register-form-group label {
+  color: #888;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+}
+
+.register-input {
+  width: 100%;
+  height: 56px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1.5px solid #2a2a2a;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: text;
+  background-color: #181818;
+  color: #FAFAFA;
+  box-sizing: border-box;
+  outline: none;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.register-input:focus {
+  border-color: #555;
+  background-color: #1e1e1e;
+}
+
+.register-input::placeholder {
+  color: #555;
+}
+
+.register-field-error {
+  color: #ff6b6b;
+  font-size: 13px;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+}
+
+/* ─── Policy Label (Step 1) ───────────────────────────────────────────────── */
+
+.register-policy-label {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #888;
+  font-size: 14px;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: -12px;
+}
+
+.register-policy-label input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  margin: 10px;
+}
+
+.register-policy-label input[type="checkbox"]:checked {
+  background-color: #6046F6;
+  border-color: #6046F6;
+  box-shadow: inset 0 0 0 3px #0C0C0C;
+}
+
+.register-policy-label input[type="checkbox"]:hover {
+  border-color: #555;
+}
+
+/* ─── Popular Users (Step 5) ──────────────────────────────────────────────── */
+
+.register-popular-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .register-popular-text {
+  color: #888;
+  font-size: 14px;
   margin: 0;
+  font-family: 'HelveticaNeueCyr', sans-serif;
 }
 
 .register-popular-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .register-popular-item {
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  color: #333;
-  cursor: pointer;
-  font-size: 14px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #181818;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+}
+
+.register-popular-item:hover {
+  background: #1e1e1e;
+  border-color: #555;
 }
 
 .register-popular-item.selected {
-  border-color: #6441A5;
-  background-color: #6441A5;
-  color: #fff;
+  border-color: #FAFAFA;
+  background: #252525;
 }
 
 .register-popular-avatar {
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  flex: 0 0 auto;
-  background: #eee;
 }
 
 .register-popular-avatar--placeholder {
-  display: inline-block;
+  background: #333;
 }
 
 .register-popular-nickname {
-  white-space: nowrap;
+  color: #FAFAFA;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .register-popular-loading,
 .register-popular-error,
 .register-popular-empty {
+  color: #888;
   font-size: 14px;
-  color: #555;
+  text-align: center;
+  padding: 20px;
+  font-family: 'HelveticaNeueCyr', sans-serif;
 }
 
-.register-popular-error {
-  color: #a00;
+/* ─── Action Buttons ──────────────────────────────────────────────────────── */
+
+.register-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.register-back-btn,
+.register-next-btn,
+.register-skip-btn,
+.register-subscribe-btn {
+  width: 100%;
+  height: 56px;
+  padding: 0 24px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+  transition: background-color 0.2s ease;
+}
+
+.register-back-btn {
+  background-color: #2a2a2a;
+  color: #FAFAFA;
+}
+
+.register-back-btn:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.register-next-btn,
+.register-subscribe-btn {
+  background-color: #FAFAFA;
+  color: #0C0C0C;
+}
+
+.register-next-btn:hover:not(:disabled),
+.register-subscribe-btn:hover:not(:disabled) {
+  background-color: #e0e0e0;
 }
 
 .register-skip-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  cursor: pointer;
+  background-color: transparent;
+  color: #888;
+  border: 1.5px solid #2a2a2a;
 }
 
-.register-choose-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  background-color: #6441A5;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
+.register-skip-btn:hover:not(:disabled) {
+  border-color: #555;
+  color: #FAFAFA;
 }
 
-.register-step-actions-finish {
-  display: flex;
-  gap: 10px;
-  margin-left: auto;
+.register-back-btn:disabled,
+.register-next-btn:disabled,
+.register-skip-btn:disabled,
+.register-subscribe-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Footer Links ────────────────────────────────────────────────────────── */
+
+.register-login-text {
+  color: #888;
+  font-size: 14px;
+  margin: 8px 0 0 0;
+  font-family: 'HelveticaNeueCyr', sans-serif;
+  align-self: center;
+}
+
+.register-login-text a {
+  color: #FAFAFA;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-login-text a:hover {
+  text-decoration: underline;
 }
