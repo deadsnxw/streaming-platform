@@ -26,7 +26,7 @@ function LoginForm({ onSuccess, onError }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="login-form">
+    <form id="login-form" onSubmit={handleSubmit} className="login-form">
       <div className="form-group">
         <input
           type="text"
