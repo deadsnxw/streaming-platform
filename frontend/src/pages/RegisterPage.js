@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import { fetchAPI, getUploadsBaseUrl } from "../services/api";
@@ -13,6 +13,106 @@ function useWindowWidth() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   return width;
+}
+
+// ===== Компонент вводу дати народження =====
+function BirthdayInput({ value, onChange, error, inputClassName }) {
+  const [day, setDay] = useState("");
+  const [month, setMonth] = useState("");
+  const [year, setYear] = useState("");
+  const monthRef = useRef(null);
+  const yearRef = useRef(null);
+
+  // Збираємо дату і передаємо вгору
+  const buildDate = (d, m, y) => {
+    if (d && m && y && y.length === 4) {
+      onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    } else {
+      onChange("");
+    }
+  };
+
+  const handleDay = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setDay(val);
+    buildDate(val, month, year);
+    if (val.length === 2) monthRef.current?.focus();
+  };
+
+  const handleMonth = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setMonth(val);
+    buildDate(day, val, year);
+    if (val.length === 2) yearRef.current?.focus();
+  };
+
+  const handleYear = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setYear(val);
+    buildDate(day, month, val);
+  };
+
+  return (
+    <div className="birthday-input-wrapper">
+      <input
+        type="text"
+        inputMode="numeric"
+        placeholder="ДД"
+        value={day}
+        onChange={handleDay}
+        maxLength={2}
+        className={`${inputClassName} birthday-input-part`}
+      />
+      <input
+        ref={monthRef}
+        type="text"
+        inputMode="numeric"
+        placeholder="ММ"
+        value={month}
+        onChange={handleMonth}
+        maxLength={2}
+        className={`${inputClassName} birthday-input-part`}
+      />
+      <input
+        ref={yearRef}
+        type="text"
+        inputMode="numeric"
+        placeholder="РРРР"
+        value={year}
+        onChange={handleYear}
+        maxLength={4}
+        className={`${inputClassName} birthday-input-part birthday-input-year`}
+      />
+    </div>
+  );
+}
+
+// ===== Валідація дати =====
+function validateBirthday(dateStr) {
+  if (!dateStr) return "Вкажіть дату народження.";
+
+  const [yearStr, monthStr, dayStr] = dateStr.split("-");
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+  const day = parseInt(dayStr, 10);
+
+  if (!year || !month || !day) return "Вкажіть повну дату.";
+  if (month < 1 || month > 12) return "Місяць має бути від 1 до 12.";
+
+  // Перевірка кількості днів у місяці
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) return `У цьому місяці лише ${daysInMonth} днів.`;
+
+  const today = new Date();
+  const birthDate = new Date(year, month - 1, day);
+
+  if (birthDate > today) return "Дата народження не може бути в майбутньому.";
+
+  const age = today.getFullYear() - year;
+  if (age > 120) return "Введіть коректний рік народження.";
+  if (year < 1900) return "Введіть коректний рік народження.";
+
+  return "";
 }
 
 export default function RegisterPage({ onRegister }) {
@@ -71,7 +171,7 @@ export default function RegisterPage({ onRegister }) {
     } else if (step === 3) {
       if (!formData.nickname.trim()) newErrors.nickname = "Введіть нікнейм.";
     } else if (step === 4) {
-      if (!formData.birthday) newErrors.birthday = "Вкажіть дату народження.";
+      newErrors.birthday = validateBirthday(formData.birthday);
     }
     setFieldErrors(newErrors);
     return !Object.values(newErrors).some(Boolean);
@@ -176,7 +276,6 @@ export default function RegisterPage({ onRegister }) {
     navigate("/");
   };
 
-  // ===== Назви кроків =====
   const stepTitles = {
     1: "Реєстрація",
     2: "Придумайте пароль",
@@ -189,8 +288,6 @@ export default function RegisterPage({ onRegister }) {
   if (isMobile) {
     return (
       <div className="register-mobile-container">
-
-        {/* Кнопка назад */}
         <button
           className="register-mobile-back"
           onClick={() => {
@@ -204,14 +301,11 @@ export default function RegisterPage({ onRegister }) {
           {step === 1 ? "Назад до першого екрана" : "Назад"}
         </button>
 
-        {/* Заголовок + крок */}
         <h1 className="register-mobile-title">{stepTitles[step]}</h1>
         {step < 5 && <p className="register-mobile-step">Крок {step} з 4</p>}
 
-        {/* Помилка */}
         {error && <div className="register-error">{error}</div>}
 
-        {/* Крок 1: Email */}
         {step === 1 && (
           <div className="register-mobile-fields">
             <input
@@ -225,7 +319,6 @@ export default function RegisterPage({ onRegister }) {
           </div>
         )}
 
-        {/* Крок 2: Пароль */}
         {step === 2 && (
           <div className="register-mobile-fields">
             <input
@@ -239,7 +332,6 @@ export default function RegisterPage({ onRegister }) {
           </div>
         )}
 
-        {/* Крок 3: Нікнейм */}
         {step === 3 && (
           <div className="register-mobile-fields">
             <input
@@ -253,20 +345,19 @@ export default function RegisterPage({ onRegister }) {
           </div>
         )}
 
-        {/* Крок 4: Дата народження */}
+        {/* Крок 4: Дата народження — три поля */}
         {step === 4 && (
           <div className="register-mobile-fields">
-            <input
-              type="date"
+            <BirthdayInput
               value={formData.birthday}
-              onChange={(e) => handleChange("birthday", e.target.value)}
-              className="register-mobile-input"
+              onChange={(val) => handleChange("birthday", val)}
+              error={fieldErrors.birthday}
+              inputClassName="register-mobile-input"
             />
             {fieldErrors.birthday && <span className="register-field-error">{fieldErrors.birthday}</span>}
           </div>
         )}
 
-        {/* Крок 5: Популярні користувачі */}
         {step === 5 && (
           <div className="register-mobile-popular">
             <p className="register-mobile-popular-text">
@@ -301,7 +392,6 @@ export default function RegisterPage({ onRegister }) {
           </div>
         )}
 
-        {/* Дії */}
         <div className="register-mobile-actions">
           {step === 1 && (
             <label className="register-mobile-policy">
@@ -327,20 +417,10 @@ export default function RegisterPage({ onRegister }) {
 
           {step === 5 && (
             <>
-              <button
-                type="button"
-                onClick={() => handleFinish(false)}
-                className="register-mobile-skip-btn"
-                disabled={loading}
-              >
+              <button type="button" onClick={() => handleFinish(false)} className="register-mobile-skip-btn" disabled={loading}>
                 Пропустити
               </button>
-              <button
-                type="button"
-                onClick={() => handleFinish(true)}
-                className="register-mobile-next-btn"
-                disabled={loading}
-              >
+              <button type="button" onClick={() => handleFinish(true)} className="register-mobile-next-btn" disabled={loading}>
                 {loading ? "Зачекайте..." : "Підписатися"}
               </button>
             </>
@@ -354,7 +434,7 @@ export default function RegisterPage({ onRegister }) {
     );
   }
 
-  // ===== ДЕСКТОПНА ВЕРСІЯ (без змін) =====
+  // ===== ДЕСКТОПНА ВЕРСІЯ =====
   return (
     <div className="registerContainer">
       <div className="register-star-background" />
@@ -362,14 +442,10 @@ export default function RegisterPage({ onRegister }) {
       <div className="register-left">
         <div className="register-text-content">
           <h1 className="register-main-title">
-            Стань<br />
-            частиною<br />
-            живого<br />
-            моменту.
+            Стань<br />частиною<br />живого<br />моменту.
           </h1>
           <p className="register-subtitle">
-            Твій простір для живого відео.<br />
-            Разом із мільйонами однодумців.
+            Твій простір для живого відео.<br />Разом із мільйонами однодумців.
           </p>
         </div>
       </div>
@@ -407,11 +483,17 @@ export default function RegisterPage({ onRegister }) {
             </div>
           </div>
         )}
+        {/* Крок 4: Дата народження — три поля */}
         {step === 4 && (
           <div className="register-step-content">
             <div className="register-form-group">
               <label>Дата народження</label>
-              <input type="date" value={formData.birthday} onChange={(e) => handleChange("birthday", e.target.value)} required className="register-input" />
+              <BirthdayInput
+                value={formData.birthday}
+                onChange={(val) => handleChange("birthday", val)}
+                error={fieldErrors.birthday}
+                inputClassName="register-input"
+              />
               {fieldErrors.birthday && <span className="register-field-error">{fieldErrors.birthday}</span>}
             </div>
           </div>

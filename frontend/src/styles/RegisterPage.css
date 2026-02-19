@@ -169,6 +169,24 @@
   font-family: 'HelveticaNeueCyr', sans-serif;
 }
 
+/* ─── Birthday Input (десктоп) ────────────────────────────────────────────── */
+
+.birthday-input-wrapper {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.birthday-input-part {
+  flex: 1;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.birthday-input-year {
+  flex: 1.6;
+}
+
 /* ─── Policy Label (Step 1) ───────────────────────────────────────────────── */
 
 .register-policy-label {
@@ -383,7 +401,6 @@
     font-family: 'HelveticaNeueCyr', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
-  /* Кнопка назад */
   .register-mobile-back {
     display: flex;
     align-items: center;
@@ -398,7 +415,6 @@
     margin-bottom: 32px;
   }
 
-  /* Заголовок */
   .register-mobile-title {
     font-size: 40px;
     font-weight: 500;
@@ -408,7 +424,6 @@
     font-family: 'HelveticaNeueCyr', sans-serif;
   }
 
-  /* Крок */
   .register-mobile-step {
     font-size: 14px;
     color: #888;
@@ -416,7 +431,6 @@
     font-family: 'HelveticaNeueCyr', sans-serif;
   }
 
-  /* Поля */
   .register-mobile-fields {
     display: flex;
     flex-direction: column;
@@ -448,7 +462,16 @@
     color: #8888bb;
   }
 
-  /* Помилка */
+  /* Birthday — три поля в мобільній */
+  .register-mobile-fields .birthday-input-wrapper {
+    gap: 8px;
+  }
+
+  .register-mobile-fields .birthday-input-part {
+    text-align: center;
+    padding: 0 8px;
+  }
+
   .register-mobile-container .register-field-error {
     color: #cc3333;
     font-size: 13px;
@@ -461,14 +484,13 @@
     margin-bottom: 12px;
   }
 
-  /* Чекбокс політики */
   .register-mobile-policy {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     font-size: 14px;
-    color: #0C0C0C;
+    color: #555;
     font-family: 'HelveticaNeueCyr', sans-serif;
     cursor: pointer;
     margin-bottom: 8px;
@@ -492,16 +514,15 @@
     box-shadow: inset 0 0 0 3px #FAFAFA;
   }
 
-  /* Дії */
   .register-mobile-actions {
-    margin-top: auto;  /* возвращаем сюда */
+    margin-top: auto;
     padding-top: 40px;
     padding-bottom: 0;
     gap: 12px;
     display: flex;
     flex-direction: column;
   }
-  /* Кнопка "Далі" */
+
   .register-mobile-next-btn {
     width: 100%;
     height: 60px;
@@ -526,7 +547,6 @@
     cursor: not-allowed;
   }
 
-  /* Кнопка "Пропустити" */
   .register-mobile-skip-btn {
     width: 100%;
     height: 60px;
@@ -547,7 +567,6 @@
     color: #555;
   }
 
-  /* Популярні користувачі */
   .register-mobile-popular {
     display: flex;
     flex-direction: column;
@@ -596,7 +615,6 @@
     color: #0C0C0C;
   }
 
-  /* Текст входу */
   .register-mobile-login-text {
     color: #888;
     font-size: 14px;
