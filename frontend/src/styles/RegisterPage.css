@@ -366,3 +366,253 @@
 .register-login-text a:hover {
   text-decoration: underline;
 }
+
+
+/* ─── МОБІЛЬНА ВЕРСІЯ (< 768px) ──────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+
+  .register-mobile-container {
+    min-height: 100vh;
+    width: 100vw;
+    background: #FAFAFA;
+    display: flex;
+    flex-direction: column;
+    padding: 60px 24px 40px;
+    box-sizing: border-box;
+    font-family: 'HelveticaNeueCyr', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* Кнопка назад */
+  .register-mobile-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    color: #0C0C0C;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+    padding: 0;
+    margin-bottom: 32px;
+  }
+
+  /* Заголовок */
+  .register-mobile-title {
+    font-size: 40px;
+    font-weight: 500;
+    color: #0C0C0C;
+    line-height: 1.1;
+    margin: 0 0 8px 0;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+  }
+
+  /* Крок */
+  .register-mobile-step {
+    font-size: 14px;
+    color: #888;
+    margin: 0 0 28px 0;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+  }
+
+  /* Поля */
+  .register-mobile-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .register-mobile-input {
+    width: 100%;
+    height: 60px;
+    padding: 0 20px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 400;
+    background-color: #EFEFFA;
+    color: #0C0C0C;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+    transition: background-color 0.2s ease;
+  }
+
+  .register-mobile-input:focus {
+    background-color: #e5e5f5;
+  }
+
+  .register-mobile-input::placeholder {
+    color: #8888bb;
+  }
+
+  /* Помилка */
+  .register-mobile-container .register-field-error {
+    color: #cc3333;
+    font-size: 13px;
+  }
+
+  .register-mobile-container .register-error {
+    background: #fff0f0;
+    border: 1px solid #ffaaaa;
+    color: #cc3333;
+    margin-bottom: 12px;
+  }
+
+  /* Чекбокс політики */
+  .register-mobile-policy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    color: #0C0C0C;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .register-mobile-policy input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid #ccc;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .register-mobile-policy input[type="checkbox"]:checked {
+    background-color: #6046F6;
+    border-color: #6046F6;
+    box-shadow: inset 0 0 0 3px #FAFAFA;
+  }
+
+  /* Дії */
+  .register-mobile-actions {
+    margin-top: auto;  /* возвращаем сюда */
+    padding-top: 40px;
+    padding-bottom: 0;
+    gap: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Кнопка "Далі" */
+  .register-mobile-next-btn {
+    width: 100%;
+    height: 60px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: #0C0C0C;
+    color: #FAFAFA;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+    transition: background-color 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .register-mobile-next-btn:hover:not(:disabled) {
+    background-color: #2a2a2a;
+  }
+
+  .register-mobile-next-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Кнопка "Пропустити" */
+  .register-mobile-skip-btn {
+    width: 100%;
+    height: 60px;
+    border-radius: 14px;
+    border: 1.5px solid #ccc;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: transparent;
+    color: #888;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+    transition: border-color 0.2s ease, color 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .register-mobile-skip-btn:hover:not(:disabled) {
+    border-color: #999;
+    color: #555;
+  }
+
+  /* Популярні користувачі */
+  .register-mobile-popular {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .register-mobile-popular-text {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+  }
+
+  .register-mobile-popular-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .register-mobile-popular-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #EFEFFA;
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+  }
+
+  .register-mobile-popular-item:hover {
+    background: #e5e5f5;
+  }
+
+  .register-mobile-popular-item.selected {
+    border-color: #6046F6;
+    background: #e8e4ff;
+  }
+
+  .register-mobile-popular-item .register-popular-nickname {
+    color: #0C0C0C;
+  }
+
+  /* Текст входу */
+  .register-mobile-login-text {
+    color: #888;
+    font-size: 14px;
+    margin-top: 16px;
+    padding-bottom: 40px;
+    text-align: center;
+    font-family: 'HelveticaNeueCyr', sans-serif;
+  }
+
+  .register-mobile-login-text a {
+    color: #0C0C0C;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .register-mobile-login-text a:hover {
+    text-decoration: underline;
+  }
+}
