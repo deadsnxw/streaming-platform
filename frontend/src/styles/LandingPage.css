@@ -271,6 +271,17 @@
     font-size: 16px;
   }
 
+  .mobile-auth .login-button {
+    background-color: #EFEFFA;
+    color: #0C0C0C;
+    box-shadow: none;
+  }
+
+  .mobile-auth .login-button:hover {
+    background-color: #e5e5f5;
+    box-shadow: none;
+  }
+
   .mobile-auth .social-buttons {
     margin-top: 30px;
     justify-content: center;
