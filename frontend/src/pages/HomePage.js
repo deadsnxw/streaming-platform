@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchAPI } from "../services/api";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
 import "../styles/HomePage.css";
 
 export default function HomePage({ user }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlFeed = searchParams.get("feed");
+  const urlQ = searchParams.get("q");
+
   const [videos, setVideos] = useState([]);
   const [selectedVideoId, setSelectedVideoId] = useState(null);
-  const [feedType, setFeedType] = useState("all"); // 'all' | 'subscriptions'
+  const [feedType, setFeedType] = useState(urlFeed === "subscriptions" ? "subscriptions" : "all");
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(urlQ || "");
+  const [isSearching, setIsSearching] = useState(!!urlQ);
 
   const loadVideos = async (type = "all") => {
     try {
@@ -34,40 +39,63 @@ export default function HomePage({ user }) {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchQuery.trim()) {
+    const q = searchQuery.trim();
+    if (q) {
+      setSearchParams((p) => {
+        const next = new URLSearchParams(p);
+        next.set("q", q);
+        next.delete("feed");
+        return next;
+      });
+    } else {
+      setSearchParams({});
+      setIsSearching(false);
       loadVideos(feedType);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setIsSearching(true);
-      const data = await fetchAPI(
-        `/videos/search?q=${encodeURIComponent(searchQuery.trim())}`,
-        { method: "GET" }
-      );
-      setVideos(data.videos || []);
-    } catch (err) {
-      console.error("Failed to search videos", err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
     setIsSearching(false);
+    setSearchParams({});
     loadVideos(feedType);
   };
 
+  // Sync feed type from URL
   useEffect(() => {
-    // Clear search when feed type changes
-    if (isSearching) {
-      setIsSearching(false);
-      setSearchQuery("");
+    const feed = urlFeed === "subscriptions" ? "subscriptions" : "all";
+    setFeedType(feed);
+  }, [urlFeed]);
+
+  // Sync search from URL and run search when q is present
+  useEffect(() => {
+    if (urlQ != null && urlQ !== searchQuery) {
+      setSearchQuery(urlQ);
+      setIsSearching(!!urlQ);
     }
-    loadVideos(feedType);
-  }, [feedType]);
+  }, [urlQ]);
+
+  useEffect(() => {
+    if (isSearching && searchQuery.trim()) {
+      const run = async () => {
+        try {
+          setLoading(true);
+          const data = await fetchAPI(
+            `/videos/search?q=${encodeURIComponent(searchQuery.trim())}`,
+            { method: "GET" }
+          );
+          setVideos(data.videos || []);
+        } catch (err) {
+          console.error("Failed to search videos", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      run();
+    } else {
+      loadVideos(feedType);
+    }
+  }, [feedType, isSearching, searchQuery]);
 
   const handleVideoClick = (video_id) => {
     setSelectedVideoId(video_id);
@@ -93,14 +121,14 @@ export default function HomePage({ user }) {
             <>
               <button
                 type="button"
-                onClick={() => setFeedType("all")}
+                onClick={() => setSearchParams({})}
                 className={`home-toggle-btn ${feedType === "all" ? "active" : ""}`}
               >
                 Всі відео
               </button>
               <button
                 type="button"
-                onClick={() => setFeedType("subscriptions")}
+                onClick={() => setSearchParams({ feed: "subscriptions" })}
                 className={`home-toggle-btn ${feedType === "subscriptions" ? "active" : ""}`}
               >
                 Підписки

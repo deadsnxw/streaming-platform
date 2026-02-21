@@ -15,6 +15,8 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
     const [bio, setBio] = useState("");
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
+    const [bannerFile, setBannerFile] = useState(null);
+    const [bannerPreview, setBannerPreview] = useState(null);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [fieldError, setFieldError] = useState({ nickname: "", bio: "" });
@@ -33,6 +35,9 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
                 if (data.avatar_url) {
                     setAvatarPreview(getUploadsBaseUrl() + data.avatar_url);
                 }
+                if (data.banner_url) {
+                    setBannerPreview(getUploadsBaseUrl() + data.banner_url);
+                }
             } catch (err) {
                 setError("Не вдалося завантажити профіль.");
             } finally {
@@ -46,9 +51,14 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
         const file = e.target.files?.[0];
         if (!file) return;
         setAvatarFile(file);
-        const url = URL.createObjectURL(file);
-        setAvatarPreview(url);
-        return () => URL.revokeObjectURL(url);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
+    const handleBannerChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
     };
 
     const handleSave = async () => {
@@ -77,6 +87,22 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
                     onProfileUpdate?.({ ...stored, ...updated });
                 }
                 setAvatarFile(null);
+            }
+
+            if (bannerFile) {
+                const form = new FormData();
+                form.append("banner", bannerFile);
+                const updated = await fetchAPI("/users/me/banner", {
+                    method: "POST",
+                    body: form,
+                });
+                setUser((u) => (u ? { ...u, ...updated } : updated));
+                const stored = authService.getCurrentUser();
+                if (stored) {
+                    localStorage.setItem("user", JSON.stringify({ ...stored, ...updated }));
+                    onProfileUpdate?.({ ...stored, ...updated });
+                }
+                setBannerFile(null);
             }
 
             const payload = {};
@@ -128,6 +154,25 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
 
             {error && <div className="settings-error-box">{error}</div>}
             {success && <div className="settings-success">{success}</div>}
+
+            <section className="settings-section">
+                <h2 style={{ fontSize: "1.1rem", marginBottom: 12 }}>Банер профілю</h2>
+                <p className="settings-hint">Завантажте банер для сторінки профілю (відображається зверху).</p>
+                <div className="settings-banner-wrap">
+                    {bannerPreview ? (
+                        <img src={bannerPreview} alt="Banner" className="settings-banner-preview" />
+                    ) : (
+                        <div className="settings-banner-placeholder">Банер</div>
+                    )}
+                    <div className="settings-banner-upload">
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={handleBannerChange}
+                        />
+                    </div>
+                </div>
+            </section>
 
             <section className="settings-section">
                 <h2 style={{ fontSize: "1.1rem", marginBottom: 12 }}>Аватар</h2>

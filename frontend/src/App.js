@@ -15,6 +15,7 @@ import { ChatProvider } from "./context/chatContext";
 import FloatingChatButton from "./features/components/FloatingChatButton";
 import ChatWindow from "./features/components/ChatWindow";
 import NavBar from "./features/components/NavBar";
+import Sidebar from "./features/components/Sidebar";
 import LandingPage from "./pages/LandingPage";
 
 const AUTH_PATHS = ["/login", "/register", "/password-reset"];
@@ -36,12 +37,20 @@ function ChatComponents({ user }) {
 
 function LayoutWithNav({ user, children }) {
     const location = useLocation();
+    const [sidebarOpen, setSidebarOpen] = React.useState(true);
     const showNav = user && !isAuthPath(location.pathname);
     return (
-        <>
+        <div className="app-layout">
             {showNav && <NavBar user={user} />}
-            {children}
-        </>
+            {showNav ? (
+                <div className="app-body">
+                    <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen((o) => !o)} />
+                    <main className="app-main">{children}</main>
+                </div>
+            ) : (
+                children
+            )}
+        </div>
     );
 }
 

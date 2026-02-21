@@ -9,7 +9,8 @@ import {
     deleteVideoById,
     watchVideo,
     recordWatch,
-    searchVideosController
+    searchVideosController,
+    getPopularTagsController
 } from '../controllers/VideoController.js';
 
 import { uploadVideo as uploadMiddleware } from '../config/upload.config.js';
@@ -28,6 +29,8 @@ router.post(
 );
 
 router.get('/search', searchVideosController);
+
+router.get('/tags/popular', getPopularTagsController);
 
 router.get('/public', getPublicVideos);
 

@@ -9,17 +9,20 @@ import VideoEditModal from "../features/components/VideoEditModal";
 import "../styles/ProfilePage.css";
 
 const BIO_TRUNCATE_LENGTH = 150;
+const TABS = [
+    { id: "home", label: "Головна" },
+    { id: "about", label: "Опис" },
+    { id: "video", label: "Відео" },
+    { id: "clips", label: "Кліпи" },
+];
 
 const ProfilePage = () => {
     const { userId } = useParams();
     const navigate = useNavigate();
     const { startNewChat } = useChat();
 
-    // Отримуємо currentUser один раз
     const [currentUser] = useState(() => authService.getCurrentUser());
-
-    // ВИПРАВЛЕНО: правильна перевірка
-    const isOwnProfile = !userId || 
+    const isOwnProfile = !userId ||
         (currentUser && String(currentUser.user_id) === String(userId));
 
     const [videos, setVideos] = useState([]);
@@ -27,6 +30,7 @@ const ProfilePage = () => {
     const [selectedVideoId, setSelectedVideoId] = useState(null);
     const [editingVideo, setEditingVideo] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("home");
 
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
@@ -38,7 +42,6 @@ const ProfilePage = () => {
                 setLoading(true);
 
                 if (isOwnProfile) {
-                    // Завантаження власних відео та повного профілю (аватар, біо)
                     const [videosRes, meRes] = await Promise.all([
                         fetchAPI("/videos/me", { method: "GET" }),
                         fetchAPI("/users/me", { method: "GET" }),
@@ -52,10 +55,7 @@ const ProfilePage = () => {
                     }
                     if (meRes) setUserInfo(meRes);
                 } else {
-                    // Завантаження відео іншого користувача
                     const data = await fetchAPI(`/videos/user/${userId}`, { method: "GET" });
-                    console.log("User videos response:", data);
-                    
                     if (Array.isArray(data)) {
                         setVideos(data);
                     } else if (data.videos && Array.isArray(data.videos)) {
@@ -64,12 +64,9 @@ const ProfilePage = () => {
                         setVideos([]);
                     }
 
-                    // Завантаження інформації про користувача
                     const userData = await fetchAPI(`/users/${userId}`, { method: "GET" });
-                    console.log("User info response:", userData);
                     setUserInfo(userData);
 
-                    // Перевірка статусу підписки
                     if (currentUser) {
                         try {
                             const status = await fetchAPI(
@@ -78,7 +75,6 @@ const ProfilePage = () => {
                             );
                             setIsSubscribed(status.subscribed || false);
                         } catch (err) {
-                            console.error("Failed to check subscription status", err);
                             setIsSubscribed(false);
                         }
                     }
@@ -100,28 +96,20 @@ const ProfilePage = () => {
     }, [userId, isOwnProfile, currentUser, navigate]);
 
     const handleToggleSubscribe = async () => {
-        if (!currentUser) {
-            navigate("/login");
-            return;
-        }
-
+        if (!currentUser) { navigate("/login"); return; }
         setSubscribing(true);
         try {
             if (isSubscribed) {
                 await fetchAPI("/subscriptions/unsubscribe", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ channelId: userId }),
                 });
                 setIsSubscribed(false);
             } else {
                 await fetchAPI("/subscriptions/subscribe", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ channelId: userId }),
                 });
                 setIsSubscribed(true);
@@ -134,27 +122,10 @@ const ProfilePage = () => {
     };
 
     const handleStartChat = async () => {
-        if (!currentUser) {
-            navigate("/login");
-            return;
-        }
-
-        if (!userId) {
-            console.error("No userId provided");
-            alert("Не вдалося визначити ID користувача");
-            return;
-        }
-
+        if (!currentUser) { navigate("/login"); return; }
+        if (!userId) return;
         const targetId = Number(userId);
-
-        if (isNaN(targetId)) {
-            console.error("Invalid userId:", userId);
-            alert("Невалідний ID користувача");
-            return;
-        }
-
-        console.log("Opening chat with user:", targetId);
-        
+        if (isNaN(targetId)) return;
         try {
             await startNewChat(targetId);
         } catch (err) {
@@ -165,9 +136,7 @@ const ProfilePage = () => {
 
     const handleVideoDelete = (video_id) => {
         setVideos((prev) => prev.filter((v) => v.video_id !== video_id));
-        if (selectedVideoId === video_id) {
-            setSelectedVideoId(null);
-        }
+        if (selectedVideoId === video_id) setSelectedVideoId(null);
     };
 
     if (loading) {
@@ -182,109 +151,183 @@ const ProfilePage = () => {
     const avatarSrc = userInfo?.avatar_url
         ? getUploadsBaseUrl() + userInfo.avatar_url
         : null;
+    const bannerSrc = userInfo?.banner_url
+        ? getUploadsBaseUrl() + userInfo.banner_url
+        : null;
+    const subscriberCount = userInfo?.subscriber_count != null
+        ? Number(userInfo.subscriber_count).toLocaleString("uk-UA")
+        : "0";
 
     return (
         <div className="profile-page">
-            <div className="profile-header">
-                <div className="profile-header-left">
-                    {avatarSrc ? (
-                        <img src={avatarSrc} alt="" className="profile-avatar" />
-                    ) : (
-                        <div className="profile-avatar-placeholder">?</div>
-                    )}
-                    <div className="profile-title-block">
-                        <h1>
-                            {isOwnProfile
-                                ? "Мій профіль"
-                                : userInfo?.nickname || "Профіль користувача"}
-                        </h1>
-                        {bio && (
+            {/* Banner */}
+            <div className="profile-banner-wrap">
+                <div
+                    className="profile-banner-bg"
+                    style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : {}}
+                />
+                <div className="profile-banner-overlay">
+
+                    {/* Інфо-картка зліва */}
+                    <div className="profile-info-card">
+                        <div className="profile-avatar-wrap">
+                            {avatarSrc ? (
+                                <img src={avatarSrc} alt="" className="profile-avatar" />
+                            ) : (
+                                <div className="profile-avatar-placeholder">?</div>
+                            )}
+                        </div>
+                        <div className="profile-title-block">
+                            <h1 className="profile-name">
+                                {isOwnProfile ? "Мій профіль" : userInfo?.nickname || "Профіль"}
+                            </h1>
+                            {bio && (
+                                <>
+                                    <p className="profile-bio">{bioDisplay}</p>
+                                    {showBioExpand && (
+                                        <button
+                                            type="button"
+                                            className="profile-bio-expand"
+                                            onClick={() => setBioExpanded((e) => !e)}
+                                        >
+                                            {bioExpanded ? "Згорнути" : "Більше"}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                            <p className="profile-followers">{subscriberCount} фолловерів</p>
+                        </div>
+                    </div>
+
+                    {/* Кнопки дій — окремо від картки, справа внизу */}
+                    <div className="profile-actions">
+                        {isOwnProfile && (
                             <>
-                                <p className="profile-bio">{bioDisplay}</p>
-                                {showBioExpand && (
-                                    <button
-                                        type="button"
-                                        className="profile-bio-expand"
-                                        onClick={() => setBioExpanded((e) => !e)}
-                                    >
-                                        {bioExpanded ? "Згорнути" : "Більше"}
-                                    </button>
-                                )}
+                                <button
+                                    type="button"
+                                    className="profile-btn profile-btn-follow"
+                                    onClick={() => navigate("/settings")}
+                                >
+                                    Налаштування
+                                </button>
+                                <button
+                                    type="button"
+                                    className="profile-btn profile-btn-subscribe-alt"
+                                    onClick={() => navigate("/upload")}
+                                >
+                                    Завантажити відео
+                                </button>
+                            </>
+                        )}
+                        {!isOwnProfile && currentUser && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="profile-btn profile-btn-follow"
+                                    onClick={handleToggleSubscribe}
+                                    disabled={subscribing}
+                                >
+                                    {subscribing ? "…" : isSubscribed ? "Відстежується" : "Відстежувати"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="profile-btn profile-btn-subscribe-alt"
+                                    onClick={handleToggleSubscribe}
+                                    disabled={subscribing}
+                                >
+                                    {subscribing ? "…" : isSubscribed ? "Відписатися" : "Підписатися"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="profile-btn profile-btn-primary"
+                                    onClick={handleStartChat}
+                                >
+                                    Написати
+                                </button>
                             </>
                         )}
                     </div>
-                </div>
 
-                <div className="profile-actions">
-                    {isOwnProfile && (
-                        <>
-                            <button
-                                type="button"
-                                className="profile-btn profile-btn-secondary"
-                                onClick={() => navigate("/settings")}
-                            >
-                                Налаштування
-                            </button>
-                            <button
-                                type="button"
-                                className="profile-btn profile-btn-primary"
-                                onClick={() => navigate("/upload")}
-                            >
-                                Завантажити відео
-                            </button>
-                        </>
-                    )}
-
-                    {!isOwnProfile && currentUser && (
-                        <>
-                            <button
-                                type="button"
-                                className="profile-btn profile-btn-subscribe"
-                                onClick={handleToggleSubscribe}
-                                disabled={subscribing}
-                            >
-                                {subscribing
-                                    ? "..."
-                                    : isSubscribed
-                                    ? "Відписатися"
-                                    : "Підписатися"}
-                            </button>
-                            <button
-                                type="button"
-                                className="profile-btn profile-btn-primary"
-                                onClick={handleStartChat}
-                            >
-                                💬 Написати
-                            </button>
-                        </>
-                    )}
                 </div>
             </div>
 
-            <h2 className="profile-videos-title">
-                Відео {videos.length > 0 && `(${videos.length})`}
-            </h2>
+            {/* Tabs */}
+            <nav className="profile-tabs">
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        className={`profile-tab ${activeTab === tab.id ? "active" : ""}`}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </nav>
 
-            {videos.length === 0 ? (
-                <p className="profile-videos-empty">
-                    {isOwnProfile
-                        ? "У вас ще немає завантажених відео"
-                        : "Користувач ще не завантажив жодного відео"}
-                </p>
-            ) : (
-                <div className="profile-videos-grid">
-                    {videos.map((v) => (
-                        <VideoCard
-                            key={v.video_id}
-                            video={v}
-                            isOwner={isOwnProfile}
-                            onClick={setSelectedVideoId}
-                            onEdit={setEditingVideo}
-                            onDelete={handleVideoDelete}
-                        />
-                    ))}
-                </div>
-            )}
+            {/* Tab content */}
+            <div className="profile-content">
+                {activeTab === "home" && (
+                    <section className="profile-home-section">
+                        {videos.length > 0 && (
+                            <h2 className="profile-section-title">Останні трансляції</h2>
+                        )}
+                        {videos.length === 0 ? (
+                            <p className="profile-videos-empty">
+                                {isOwnProfile
+                                    ? "У вас ще немає завантажених відео"
+                                    : "Користувач ще не завантажив жодного відео"}
+                            </p>
+                        ) : (
+                            <div className="profile-videos-grid">
+                                {videos.map((v) => (
+                                    <VideoCard
+                                        key={v.video_id}
+                                        video={v}
+                                        isOwner={isOwnProfile}
+                                        onClick={setSelectedVideoId}
+                                        onEdit={setEditingVideo}
+                                        onDelete={handleVideoDelete}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                )}
+                {activeTab === "about" && (
+                    <section className="profile-about-section">
+                        <h2 className="profile-section-title">Опис</h2>
+                        <p className="profile-about-bio">{bio || "Немає опису."}</p>
+                    </section>
+                )}
+                {activeTab === "video" && (
+                    <section className="profile-video-section">
+                        <h2 className="profile-section-title">Відео {videos.length > 0 && `(${videos.length})`}</h2>
+                        {videos.length === 0 ? (
+                            <p className="profile-videos-empty">Немає відео.</p>
+                        ) : (
+                            <div className="profile-videos-grid">
+                                {videos.map((v) => (
+                                    <VideoCard
+                                        key={v.video_id}
+                                        video={v}
+                                        isOwner={isOwnProfile}
+                                        onClick={setSelectedVideoId}
+                                        onEdit={setEditingVideo}
+                                        onDelete={handleVideoDelete}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                )}
+                {activeTab === "clips" && (
+                    <section className="profile-clips-section">
+                        <h2 className="profile-section-title">Кліпи</h2>
+                        <p className="profile-videos-empty">Кліпи поки недоступні.</p>
+                    </section>
+                )}
+            </div>
 
             {selectedVideoId && (
                 <VideoModal
@@ -302,9 +345,7 @@ const ProfilePage = () => {
                     onDelete={handleVideoDelete}
                     onUpdate={(updated) => {
                         setVideos((prev) =>
-                            prev.map((v) =>
-                                v.video_id === updated.video_id ? updated : v
-                            )
+                            prev.map((v) => (v.video_id === updated.video_id ? updated : v))
                         );
                         setEditingVideo(null);
                     }}

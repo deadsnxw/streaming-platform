@@ -79,3 +79,18 @@ export const uploadMyAvatar = async (req, res) => {
         res.status(500).json({ message: 'Failed to upload avatar', error: error.message });
     }
 };
+
+export const uploadMyBanner = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'banner file is required' });
+        }
+
+        const bannerUrl = `/uploads/banners/${req.file.filename}`;
+        const updated = await updateUser(req.user.user_id, { banner_url: bannerUrl });
+        res.json(updated);
+    } catch (error) {
+        console.error('Upload banner error:', error);
+        res.status(500).json({ message: 'Failed to upload banner', error: error.message });
+    }
+};

@@ -294,6 +294,20 @@ export const getVideoTags = async (videoId) => {
     return rows;
 };
 
+export const getPopularTags = async (limit = 10) => {
+    const { rows } = await pool.query(
+        `SELECT t.tag_id, t.name, COUNT(vt.video_id)::int AS video_count
+         FROM tags t
+         JOIN video_tags vt ON t.tag_id = vt.tag_id
+         JOIN videos v ON v.video_id = vt.video_id AND v.is_public = true AND v.is_active = true
+         GROUP BY t.tag_id, t.name
+         ORDER BY video_count DESC, t.name
+         LIMIT $1`,
+        [Math.min(Math.max(1, limit), 50)]
+    );
+    return rows;
+};
+
 export const searchVideos = async (searchQuery, limit = 20, offset = 0) => {
     if (!searchQuery || searchQuery.trim().length === 0) {
         return getAllPublicVideos(limit, offset);
