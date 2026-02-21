@@ -14,7 +14,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { ChatProvider } from "./context/chatContext";
 import FloatingChatButton from "./features/components/FloatingChatButton";
 import ChatWindow from "./features/components/ChatWindow";
-import NavBar from "./components/NavBar";
+import NavBar from "./features/components/NavBar";
 import LandingPage from "./pages/LandingPage";
 
 const AUTH_PATHS = ["/login", "/register", "/password-reset"];
