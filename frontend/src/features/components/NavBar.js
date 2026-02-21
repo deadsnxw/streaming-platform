@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { getUploadsBaseUrl } from "../services/api";
-import "../styles/NavBar.css";
+import { getUploadsBaseUrl } from "../../services/api";
+import "../../styles/NavBar.css";
 
 export default function NavBar({ user }) {
     if (!user) return null;

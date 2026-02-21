@@ -14,7 +14,7 @@ services:
       - NODE_ENV=development
       - PORT=5000
       - HOST=0.0.0.0
-      - JWT_SECRET=${JWT_SECRET:-viperrdoublerrkaiangelninemiceqweqweqwe}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=7d
       - CORS_ORIGIN=*
     env_file:
