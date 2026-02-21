@@ -9,6 +9,12 @@ const FloatingChatButton = () => {
         loadChats();
     }, []);
 
+    useEffect(() => {
+        const openPanel = () => setOpen(true);
+        window.addEventListener("openChatPanel", openPanel);
+        return () => window.removeEventListener("openChatPanel", openPanel);
+    }, []);
+
     // Якщо чат відкритий, не показувати кнопку
     if (currentChatId) return null;
 

@@ -9,7 +9,8 @@ import {
     updateVideo,
     deleteVideo,
     recordVideoView,
-    searchVideos
+    searchVideos,
+    getPopularTags
 } from '../db/video.repository.js';
 
 export const watchVideo = async (req, res) => {
@@ -356,5 +357,16 @@ export const searchVideosController = async (req, res) => {
     } catch (error) {
         console.error('Search videos error:', error);
         res.status(500).json({ message: 'Failed to search videos', error: error.message });
+    }
+};
+
+export const getPopularTagsController = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const tags = await getPopularTags(limit);
+        res.json({ tags });
+    } catch (error) {
+        console.error('Get popular tags error:', error);
+        res.status(500).json({ message: 'Failed to get popular tags', error: error.message });
     }
 };

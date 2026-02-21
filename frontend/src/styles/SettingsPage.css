@@ -13,6 +13,44 @@
   margin-bottom: 24px;
 }
 
+.settings-hint {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 12px 0;
+}
+
+.settings-banner-wrap {
+  margin-bottom: 16px;
+}
+
+.settings-banner-preview {
+  width: 100%;
+  max-width: 560px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #eee;
+  display: block;
+}
+
+.settings-banner-placeholder {
+  width: 100%;
+  max-width: 560px;
+  height: 160px;
+  border-radius: 12px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.settings-banner-upload input[type="file"] {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
 .settings-avatar-wrap {
   display: flex;
   align-items: center;

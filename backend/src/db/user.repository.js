@@ -81,6 +81,7 @@ export const getUserById = async (id) => {
             u.email, 
             u.nickname, 
             u.avatar_url, 
+            u.banner_url, 
             u.bio, 
             u.birth_date,
             COALESCE(COUNT(s.subscription_id), 0) as subscriber_count
@@ -111,7 +112,7 @@ export const updateUser = async (id, data) => {
         UPDATE users
         SET ${fields.join(', ')}, updated_at = NOW()
         WHERE user_id = $${idx}
-        RETURNING user_id, email, nickname, avatar_url, bio
+        RETURNING user_id, email, nickname, avatar_url, banner_url, bio
     `;
 
     values.push(id);
