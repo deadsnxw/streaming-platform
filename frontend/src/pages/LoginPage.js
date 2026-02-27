@@ -84,6 +84,7 @@ export default function LoginPage({ onLogin }) {
         </div>
       </div>
       <div className="login-right">
+        <img src="/logo-full.svg" alt="Logo" className="login-logo" />
         {error && <div className="error">{error}</div>}
         <h1 className="login-right-title">Увійти</h1>
         <LoginForm onSuccess={handleSuccess} onError={setError} />

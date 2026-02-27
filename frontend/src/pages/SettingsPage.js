@@ -20,6 +20,12 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [fieldError, setFieldError] = useState({ nickname: "", bio: "" });
+    const [streamKey, setStreamKey] = useState(null);
+    const [rtmpUrl, setRtmpUrl] = useState(null);
+    const [showStreamKey, setShowStreamKey] = useState(false);
+    const [streamTitle, setStreamTitle] = useState("");
+    const [streamDescription, setStreamDescription] = useState("");
+    const [streamInfoSaving, setStreamInfoSaving] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -46,6 +52,32 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
         };
         load();
     }, [navigate]);
+
+    /* ── Load stream key ── */
+    useEffect(() => {
+        const loadStreamKey = async () => {
+            try {
+                const data = await fetchAPI("/streams/me/key", { method: "GET" });
+                setStreamKey(data.stream_key || null);
+                setRtmpUrl(data.rtmp_url || null);
+            } catch {
+                // silently skip — user may not have a stream key
+            }
+        };
+        const loadStreamInfo = async () => {
+            try {
+                const me = authService.getCurrentUser();
+                if (!me) return;
+                const data = await fetchAPI(`/streams/status/${me.user_id}`, { method: "GET" });
+                setStreamTitle(data.stream_title || "");
+                setStreamDescription(data.stream_description || "");
+            } catch { /* ignore */ }
+        };
+        if (authService.getCurrentUser()) {
+            loadStreamKey();
+            loadStreamInfo();
+        }
+    }, []);
 
     const handleAvatarChange = (e) => {
         const file = e.target.files?.[0];
@@ -227,6 +259,106 @@ export default function SettingsPage({ onProfileUpdate, onLogout }) {
                     <div className="field-hint">{bio.length} / {BIO_MAX_LENGTH}</div>
                     {fieldError.bio && <div className="field-error">{fieldError.bio}</div>}
                 </div>
+            </section>
+
+            <section className="settings-section">
+                <h2 style={{ fontSize: "1.1rem", marginBottom: 12 }}>Стрім</h2>
+                <p className="settings-hint">Використовуйте ці дані для налаштування OBS або іншого стрім-софту.</p>
+
+                <div className="settings-field">
+                    <label>RTMP URL</label>
+                    <div className="settings-stream-row">
+                        <input
+                            type="text"
+                            readOnly
+                            value={rtmpUrl || "Завантаження..."}
+                            onClick={(e) => e.target.select()}
+                        />
+                        <button
+                            type="button"
+                            className="settings-copy-btn"
+                            onClick={() => rtmpUrl && navigator.clipboard.writeText(rtmpUrl)}
+                        >
+                            Копіювати
+                        </button>
+                    </div>
+                </div>
+
+                <div className="settings-field">
+                    <label>Ключ потоку (Stream Key)</label>
+                    <div className="settings-stream-row">
+                        <input
+                            type={showStreamKey ? "text" : "password"}
+                            readOnly
+                            value={streamKey || "Завантаження..."}
+                            onClick={(e) => e.target.select()}
+                        />
+                        <button
+                            type="button"
+                            className="settings-copy-btn"
+                            onClick={() => setShowStreamKey((s) => !s)}
+                        >
+                            {showStreamKey ? "Сховати" : "Показати"}
+                        </button>
+                        <button
+                            type="button"
+                            className="settings-copy-btn"
+                            onClick={() => streamKey && navigator.clipboard.writeText(streamKey)}
+                        >
+                            Копіювати
+                        </button>
+                    </div>
+                </div>
+
+                <div className="settings-field">
+                    <label htmlFor="stream-title">Назва стріму</label>
+                    <input
+                        id="stream-title"
+                        type="text"
+                        value={streamTitle}
+                        onChange={(e) => setStreamTitle(e.target.value)}
+                        placeholder="Наприклад: Граємо в Minecraft"
+                        maxLength={200}
+                    />
+                </div>
+
+                <div className="settings-field">
+                    <label htmlFor="stream-desc">Опис стріму</label>
+                    <textarea
+                        id="stream-desc"
+                        value={streamDescription}
+                        onChange={(e) => setStreamDescription(e.target.value)}
+                        placeholder="Про що буде стрім..."
+                        maxLength={2000}
+                    />
+                    <div className="field-hint">{streamDescription.length} / 2000</div>
+                </div>
+
+                <button
+                    type="button"
+                    className="settings-btn settings-btn-primary"
+                    style={{ marginTop: 8, width: "auto" }}
+                    disabled={streamInfoSaving}
+                    onClick={async () => {
+                        setStreamInfoSaving(true);
+                        try {
+                            await fetchAPI("/streams/me/info", {
+                                method: "PATCH",
+                                body: JSON.stringify({
+                                    stream_title: streamTitle,
+                                    stream_description: streamDescription,
+                                }),
+                            });
+                            setSuccess("Інформацію про стрім збережено.");
+                        } catch (err) {
+                            setError(err.message || "Не вдалося зберегти інфо стріму.");
+                        } finally {
+                            setStreamInfoSaving(false);
+                        }
+                    }}
+                >
+                    {streamInfoSaving ? "Збереження…" : "Зберегти інфо стріму"}
+                </button>
             </section>
 
             <div className="settings-actions">

@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { fetchAPI } from "../services/api";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
+import LiveStreamCard from "../features/components/LiveStreamCard";
+import useLiveStreams from "../hooks/useLiveStreams";
 import "../styles/HomePage.css";
 
 export default function HomePage({ user }) {
@@ -16,6 +18,8 @@ export default function HomePage({ user }) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(urlQ || "");
   const [isSearching, setIsSearching] = useState(!!urlQ);
+
+  const { liveStreams } = useLiveStreams(!!user);
 
   const loadVideos = async (type = "all") => {
     try {
@@ -161,6 +165,21 @@ export default function HomePage({ user }) {
       </form>
 
       {loading && <p>Завантаження...</p>}
+
+      {/* Live streams */}
+      {!loading && liveStreams.length > 0 && !isSearching && (
+        <section className="home-live-section">
+          <h2 className="home-live-title">
+            <span className="ls-player__badge">LIVE</span>
+            Зараз у прямому ефірі
+          </h2>
+          <div className="home-live-grid">
+            {liveStreams.map((s) => (
+              <LiveStreamCard key={s.user_id} stream={s} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {!loading && videos.length === 0 && (
         <p>

@@ -5,6 +5,7 @@ import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LivePage from "./pages/LivePage";
+import StreamPage from "./pages/StreamPage";
 import SettingsPage from "./pages/SettingsPage";
 import { authService } from "./services/authService";
 import UploadVideoPage from "./pages/UploadVideoPage";
@@ -74,6 +75,7 @@ export default function App() {
                         <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" replace />} />
                         <Route path="/settings" element={user ? <SettingsPage onProfileUpdate={setUser} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} />
                         <Route path="/live" element={<LivePage />} />
+                        <Route path="/stream/:userId" element={<StreamPage />} />
                         <Route path="/upload" element={<UploadVideoPage />} />
                         <Route path="/" element={user ? <HomePage user={user} /> : <LandingPage />} />
                         <Route path="/password-reset" element={<ForgotPasswordPage />} />

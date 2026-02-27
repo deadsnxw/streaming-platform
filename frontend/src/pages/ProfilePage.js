@@ -6,6 +6,7 @@ import { useChat } from "../context/chatContext";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
 import VideoEditModal from "../features/components/VideoEditModal";
+import LiveStreamPlayer from "../features/components/LiveStreamPlayer";
 import "../styles/ProfilePage.css";
 
 const BIO_TRUNCATE_LENGTH = 150;
@@ -35,6 +36,7 @@ const ProfilePage = () => {
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
     const [bioExpanded, setBioExpanded] = useState(false);
+    const [streamStatus, setStreamStatus] = useState({ live: false, stream_key: null });
 
     useEffect(() => {
         const loadData = async () => {
@@ -94,6 +96,26 @@ const ProfilePage = () => {
 
         loadData();
     }, [userId, isOwnProfile, currentUser, navigate]);
+
+    /* ── poll stream status for this profile ────────────────────────── */
+    useEffect(() => {
+        const profileId = isOwnProfile ? currentUser?.user_id : userId;
+        if (!profileId) return;
+
+        let cancelled = false;
+        const check = async () => {
+            try {
+                const data = await fetchAPI(`/streams/status/${profileId}`, { method: "GET" });
+                if (!cancelled) setStreamStatus(data);
+            } catch {
+                if (!cancelled) setStreamStatus({ live: false, stream_key: null });
+            }
+        };
+
+        check();
+        const id = setInterval(check, 15_000);
+        return () => { cancelled = true; clearInterval(id); };
+    }, [userId, isOwnProfile, currentUser]);
 
     const handleToggleSubscribe = async () => {
         if (!currentUser) { navigate("/login"); return; }
@@ -269,6 +291,26 @@ const ProfilePage = () => {
             <div className="profile-content">
                 {activeTab === "home" && (
                     <section className="profile-home-section">
+                        {/* Compact live stream */}
+                        {streamStatus.live && streamStatus.stream_key && (
+                            <div className="profile-live-section">
+                                <h2 className="profile-live-title">
+                                    <span className="ls-player__badge">LIVE</span>
+                                    {isOwnProfile ? "Ви у прямому ефірі" : `${userInfo?.nickname || "Канал"} у ефірі`}
+                                </h2>
+                                <div
+                                    className="profile-live-player-link"
+                                    onClick={() => navigate(`/stream/${isOwnProfile ? currentUser?.user_id : userId}`)}
+                                    title="Відкрити стрім"
+                                >
+                                    <LiveStreamPlayer
+                                        streamKey={streamStatus.stream_key}
+                                        nickname={isOwnProfile ? "Мій стрім" : userInfo?.nickname}
+                                        compact
+                                    />
+                                </div>
+                            </div>
+                        )}
                         {videos.length > 0 && (
                             <h2 className="profile-section-title">Останні трансляції</h2>
                         )}

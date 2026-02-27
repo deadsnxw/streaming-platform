@@ -20,6 +20,7 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
     console.log("Новий користувач підключився:", socket.id);
 
+    /* ── Private chats ── */
     socket.on("join_chat", (chatId) => {
         socket.join(`chat_${chatId}`);
         console.log(`Socket ${socket.id} приєднався до chat_${chatId}`);
@@ -31,6 +32,28 @@ io.on("connection", (socket) => {
         );
 
         io.to(`chat_${chatId}`).emit("new_message", message);
+    });
+
+    /* ── Stream chat (in-memory, no DB) ── */
+    socket.on("join_stream_chat", (streamUserId) => {
+        const room = `stream_${streamUserId}`;
+        socket.join(room);
+        console.log(`Socket ${socket.id} joined stream chat ${room}`);
+    });
+
+    socket.on("leave_stream_chat", (streamUserId) => {
+        socket.leave(`stream_${streamUserId}`);
+    });
+
+    socket.on("stream_chat_message", ({ streamUserId, nickname, text }) => {
+        if (!text || !text.trim()) return;
+        const msg = {
+            id: `${socket.id}_${Date.now()}`,
+            nickname: nickname || "Анонім",
+            text: text.trim().slice(0, 500),
+            timestamp: Date.now(),
+        };
+        io.to(`stream_${streamUserId}`).emit("stream_chat_message", msg);
     });
 
     socket.on("disconnect", () => {

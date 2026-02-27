@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { fetchAPI, getUploadsBaseUrl } from "../../services/api";
+import useLiveStreams from "../../hooks/useLiveStreams";
 import "../../styles/Sidebar.css";
+import "../../styles/LiveStream.css";
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 56;
@@ -11,6 +13,10 @@ export default function Sidebar({ open, onToggle }) {
     const [popularTags, setPopularTags] = useState([]);
     const [loading, setLoading] = useState(true);
     const [tagsLoading, setTagsLoading] = useState(true);
+    const { liveStreams } = useLiveStreams(true);
+
+    // Build a Set of currently live user_ids for quick lookup
+    const liveUserIds = new Set(liveStreams.map((s) => s.user_id));
 
     useEffect(() => {
         let cancelled = false;
@@ -105,7 +111,11 @@ export default function Sidebar({ open, onToggle }) {
                                                 )}
                                             </span>
                                             <span className="sidebar-channel-name">{ch.nickname}</span>
-                                            <span className="sidebar-channel-meta">• —</span>
+                                            {liveUserIds.has(ch.channel_id) ? (
+                                                <span className="sidebar-live-dot" title="У прямому ефірі" />
+                                            ) : (
+                                                <span className="sidebar-channel-meta">• —</span>
+                                            )}
                                         </Link>
                                     </li>
                                 ))}
@@ -121,8 +131,38 @@ export default function Sidebar({ open, onToggle }) {
                     </section>
 
                     <section className="sidebar-section">
-                        <h3 className="sidebar-section-title">Активні канали</h3>
-                        <p className="sidebar-placeholder">Поки що немає стримів</p>
+                        <h3 className="sidebar-section-title sidebar-live-section-title">
+                            Активні канали
+                            {liveStreams.length > 0 && <span className="sidebar-live-dot" />}
+                        </h3>
+                        {liveStreams.length === 0 ? (
+                            <p className="sidebar-placeholder">Поки що немає стримів</p>
+                        ) : (
+                            <ul className="sidebar-channel-list">
+                                {liveStreams.map((s) => (
+                                    <li key={s.user_id}>
+                                        <Link
+                                            to={`/profile/${s.user_id}`}
+                                            className="sidebar-channel-item"
+                                        >
+                                            <span className="sidebar-channel-avatar">
+                                                {s.avatar_url ? (
+                                                    <img
+                                                        src={getUploadsBaseUrl() + s.avatar_url}
+                                                        alt=""
+                                                    />
+                                                ) : (
+                                                    <span>?</span>
+                                                )}
+                                            </span>
+                                            <span className="sidebar-channel-name">{s.nickname}</span>
+                                            <span className="sidebar-live-dot" title="LIVE" />
+                                            <span className="sidebar-live-label">LIVE</span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </section>
 
                     <section className="sidebar-section">
