@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getUploadsBaseUrl } from "../../services/api";
 import "../../styles/NavBar.css";
+import { useChat } from "../../context/chatContext";
 
 function useWindowWidth() {
   const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
@@ -19,6 +20,7 @@ export default function NavBar({ user }) {
     const [searchInput, setSearchInput] = useState("");
     const width = useWindowWidth();
     const isMobile = width < 768;
+    const { isChatOpen } = useChat();
 
     const searchParams = new URLSearchParams(location.search || "");
     const isFollowing = searchParams.get("feed") === "subscriptions" && location.pathname === "/";
@@ -93,7 +95,7 @@ export default function NavBar({ user }) {
                 {/* Чат */}
                 <button
                     type="button"
-                    className={`mobile-nav-item ${isChat ? "active" : ""}`}
+                    className={`mobile-nav-item ${isChatOpen ? "active" : ""}`}
                     onClick={() => window.dispatchEvent(new Event("openChatPanel"))}
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -161,7 +163,7 @@ export default function NavBar({ user }) {
             <div className="navbar-right">
                 <button
                     type="button"
-                    className="navbar-icon-btn"
+                    className={`navbar-icon-btn ${isChatOpen ? "active" : ""}`}
                     aria-label="Чат"
                     onClick={() => window.dispatchEvent(new Event("openChatPanel"))}
                 >

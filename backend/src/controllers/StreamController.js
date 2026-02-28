@@ -25,8 +25,9 @@ function parseActiveStreamKeys(xml) {
 /**
  * GET /api/streams/live
  * Returns the list of currently live users with their stream data.
+ * Optional query param: q — filter by nickname or stream_title (partial, case-insensitive).
  */
-export const getLiveStreams = async (_req, res) => {
+export const getLiveStreams = async (req, res) => {
     try {
         const response = await fetch(RTMP_STAT_URL);
         if (!response.ok) return res.json({ streams: [] });
@@ -46,7 +47,18 @@ export const getLiveStreams = async (_req, res) => {
             activeKeys
         );
 
-        res.json({ streams: rows });
+        let streams = rows;
+        const q = req.query?.q;
+        if (q && String(q).trim().length > 0) {
+            const term = String(q).trim().toLowerCase();
+            streams = rows.filter(
+                (u) =>
+                    (u.nickname && u.nickname.toLowerCase().includes(term)) ||
+                    (u.stream_title && u.stream_title.toLowerCase().includes(term))
+            );
+        }
+
+        res.json({ streams });
     } catch (err) {
         console.error('getLiveStreams error:', err.message);
         res.json({ streams: [] });

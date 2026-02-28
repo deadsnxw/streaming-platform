@@ -151,3 +151,11 @@
   font-size: 13px;
   color: #6b6b76;
 }
+
+@media (max-width: 767px) {
+  .sidebar,
+  .sidebar-open,
+  .sidebar-collapsed {
+    display: none !important;
+  }
+}

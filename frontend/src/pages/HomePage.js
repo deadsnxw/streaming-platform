@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { fetchAPI } from "../services/api";
+import { useSearchParams, Link } from "react-router-dom";
+import { fetchAPI, getUploadsBaseUrl } from "../services/api";
 import VideoCard from "../features/components/VideoCard";
 import VideoModal from "../features/components/VideoModal";
 import LiveStreamCard from "../features/components/LiveStreamCard";
@@ -13,6 +13,8 @@ export default function HomePage({ user }) {
   const urlQ = searchParams.get("q");
 
   const [videos, setVideos] = useState([]);
+  const [searchStreams, setSearchStreams] = useState([]);
+  const [searchUsers, setSearchUsers] = useState([]);
   const [selectedVideoId, setSelectedVideoId] = useState(null);
   const [feedType, setFeedType] = useState(urlFeed === "subscriptions" ? "subscriptions" : "all");
   const [loading, setLoading] = useState(true);
@@ -84,19 +86,28 @@ export default function HomePage({ user }) {
       const run = async () => {
         try {
           setLoading(true);
-          const data = await fetchAPI(
-            `/videos/search?q=${encodeURIComponent(searchQuery.trim())}`,
-            { method: "GET" }
-          );
-          setVideos(data.videos || []);
+          const q = encodeURIComponent(searchQuery.trim());
+          const [videoRes, streamRes, userRes] = await Promise.all([
+            fetchAPI(`/videos/search?q=${q}`, { method: "GET" }),
+            fetchAPI(`/streams/live?q=${q}`, { method: "GET" }),
+            fetchAPI(`/users/search?q=${q}`, { method: "GET" }),
+          ]);
+          setVideos(videoRes.videos || []);
+          setSearchStreams(streamRes.streams || []);
+          setSearchUsers(Array.isArray(userRes) ? userRes : []);
         } catch (err) {
-          console.error("Failed to search videos", err);
+          console.error("Failed to search", err);
+          setVideos([]);
+          setSearchStreams([]);
+          setSearchUsers([]);
         } finally {
           setLoading(false);
         }
       };
       run();
     } else {
+      setSearchStreams([]);
+      setSearchUsers([]);
       loadVideos(feedType);
     }
   }, [feedType, isSearching, searchQuery]);
@@ -154,7 +165,7 @@ export default function HomePage({ user }) {
       <form onSubmit={handleSearch} className="home-search-form">
         <input
           type="text"
-          placeholder="Пошук відео за назвою або тегами..."
+          placeholder="Пошук за назвою, тегами або нікнеймом..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="home-search-input"
@@ -166,7 +177,62 @@ export default function HomePage({ user }) {
 
       {loading && <p>Завантаження...</p>}
 
-      {/* Live streams */}
+      {/* Search results: Content (streams + videos) and People (only if any) */}
+      {!loading && isSearching && (
+        <>
+          {/* Content section: live streams matching query + videos */}
+          <section className="home-search-section">
+            <h2 className="home-search-section-title">Контент</h2>
+            {searchStreams.length > 0 && (
+              <div className="home-live-grid">
+                {searchStreams.map((s) => (
+                  <LiveStreamCard key={s.user_id} stream={s} />
+                ))}
+              </div>
+            )}
+            <div className="home-videos-grid">
+              {videos.map((v) => (
+                <VideoCard key={v.video_id} video={v} onClick={handleVideoClick} />
+              ))}
+            </div>
+            {searchStreams.length === 0 && videos.length === 0 && (
+              <p className="home-search-empty">Нічого не знайдено за вашим запитом.</p>
+            )}
+          </section>
+
+          {/* People section: only when there are users */}
+          {searchUsers.length > 0 && (
+            <section className="home-search-section">
+              <h2 className="home-search-section-title">Користувачі</h2>
+              <div className="home-search-users">
+                {searchUsers.map((u) => (
+                  <Link
+                    key={u.user_id}
+                    to={`/profile/${u.user_id}`}
+                    className="home-search-user-card"
+                  >
+                    <div className="home-search-user-avatar">
+                      {u.avatar_url ? (
+                        <img src={getUploadsBaseUrl() + u.avatar_url} alt="" />
+                      ) : (
+                        <span>{u.nickname?.charAt(0).toUpperCase() || "?"}</span>
+                      )}
+                    </div>
+                    <div className="home-search-user-info">
+                      <span className="home-search-user-nickname">{u.nickname}</span>
+                      <span className="home-search-user-subs">
+                        {Number(u.subscriber_count || 0).toLocaleString("uk-UA")} підписників
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* Non-search: Live streams */}
       {!loading && liveStreams.length > 0 && !isSearching && (
         <section className="home-live-section">
           <h2 className="home-live-title">
@@ -181,21 +247,21 @@ export default function HomePage({ user }) {
         </section>
       )}
 
-      {!loading && videos.length === 0 && (
+      {!loading && !isSearching && videos.length === 0 && (
         <p>
-          {isSearching
-            ? "Нічого не знайдено за вашим запитом."
-            : feedType === "subscriptions"
+          {feedType === "subscriptions"
             ? "Немає відео з каналів, на які ви підписані."
             : "Немає доступних відео."}
         </p>
       )}
 
-      <div className="home-videos-grid">
-        {videos.map((v) => (
-          <VideoCard key={v.video_id} video={v} onClick={handleVideoClick} />
-        ))}
-      </div>
+      {!loading && !isSearching && (
+        <div className="home-videos-grid">
+          {videos.map((v) => (
+            <VideoCard key={v.video_id} video={v} onClick={handleVideoClick} />
+          ))}
+        </div>
+      )}
 
       {selectedVideoId && (
         <VideoModal

@@ -8,13 +8,13 @@ import LivePage from "./pages/LivePage";
 import StreamPage from "./pages/StreamPage";
 import SettingsPage from "./pages/SettingsPage";
 import { authService } from "./services/authService";
+import { fetchAPI } from "./services/api";
 import UploadVideoPage from "./pages/UploadVideoPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyCodePage from "./pages/VerifyCodePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { ChatProvider } from "./context/chatContext";
 import FloatingChatButton from "./features/components/FloatingChatButton";
-import ChatWindow from "./features/components/ChatWindow";
 import NavBar from "./features/components/NavBar";
 import Sidebar from "./features/components/Sidebar";
 import LandingPage from "./pages/LandingPage";
@@ -28,12 +28,7 @@ function isAuthPath(pathname) {
 function ChatComponents({ user }) {
     const location = useLocation();
     if (!user || isAuthPath(location.pathname)) return null;
-    return (
-        <>
-            <FloatingChatButton />
-            <ChatWindow />
-        </>
-    );
+    return <FloatingChatButton />;
 }
 
 function LayoutWithNav({ user, children }) {
@@ -62,6 +57,26 @@ export default function App() {
         const handleStorage = () => setUser(authService.getCurrentUser());
         window.addEventListener('storage', handleStorage);
         return () => window.removeEventListener('storage', handleStorage);
+    }, []);
+
+    // Після логіну / перезавантаження оновлюємо дані користувача з бекенду,
+    // щоб у стейті (і навбарі) були актуальні avatar_url тощо.
+    useEffect(() => {
+        const token = authService.getToken?.();
+        if (!token) return;
+
+        (async () => {
+            try {
+                const me = await fetchAPI("/users/me", { method: "GET" });
+                if (me) {
+                    setUser((prev) => ({ ...(prev || {}), ...me }));
+                    const stored = authService.getCurrentUser() || {};
+                    localStorage.setItem("user", JSON.stringify({ ...stored, ...me }));
+                }
+            } catch (err) {
+                console.error("Failed to refresh current user", err);
+            }
+        })();
     }, []);
 
     return (
