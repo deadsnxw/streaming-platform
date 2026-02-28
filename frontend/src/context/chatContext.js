@@ -8,8 +8,10 @@ const ChatContext = createContext();
 export const ChatProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [chats, setChats] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const currentUser = authService.getCurrentUser();
 
@@ -36,12 +38,19 @@ export const ChatProvider = ({ children }) => {
       if (msg.chat_id === currentChatId) {
         setMessages((prev) => [...prev, msg]);
       }
-      
+
       setChats((prev) =>
         prev.map((c) =>
           c.chat_id === msg.chat_id
             ? { ...c, last_message: msg.text, last_message_at: msg.created_at }
             : c
+        )
+      );
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.chat_id === msg.chat_id
+            ? { ...r, last_message: msg.text, last_message_at: msg.created_at }
+            : r
         )
       );
     };
@@ -53,6 +62,12 @@ export const ChatProvider = ({ children }) => {
     };
   }, [socket, currentChatId]);
 
+  useEffect(() => {
+    const toggle = () => setIsChatOpen(prev => !prev);
+    window.addEventListener("openChatPanel", toggle);
+    return () => window.removeEventListener("openChatPanel", toggle);
+  }, []);
+
   const loadChats = useCallback(async () => {
     if (!currentUser) return;
     try {
@@ -63,9 +78,52 @@ export const ChatProvider = ({ children }) => {
     }
   }, [currentUser?.user_id]);
 
+  const loadRequests = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const data = await fetchAPI("/chats/requests");
+      setRequests(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load requests", err);
+      setRequests([]);
+    }
+  }, [currentUser?.user_id]);
+
+  const acceptRequest = useCallback(async (chatId) => {
+    try {
+      await fetchAPI(`/chats/${chatId}/accept`, { method: "POST" });
+      await loadChats();
+      await loadRequests();
+    } catch (err) {
+      console.error("Failed to accept request", err);
+      throw err;
+    }
+  }, [loadChats, loadRequests]);
+
+  const ignoreRequest = useCallback(async (chatId) => {
+    try {
+      await fetchAPI(`/chats/${chatId}/ignore`, { method: "POST" });
+      await loadRequests();
+    } catch (err) {
+      console.error("Failed to ignore request", err);
+      throw err;
+    }
+  }, [loadRequests]);
+
+  const deleteChat = useCallback(async (chatId) => {
+    try {
+      await fetchAPI(`/chats/${chatId}`, { method: "DELETE" });
+      await loadChats();
+    } catch (err) {
+      console.error("Failed to delete chat", err);
+      throw err;
+    }
+  }, [loadChats]);
+
   const openChat = useCallback(async (chatId) => {
     try {
       setCurrentChatId(chatId);
+      setIsChatOpen(true);
       const data = await fetchAPI(`/chats/${chatId}/messages`);
       setMessages(data);
 
@@ -77,10 +135,10 @@ export const ChatProvider = ({ children }) => {
     }
   }, [socket]);
 
-  // ДОДАНО: функція закриття чату
   const closeChat = useCallback(() => {
     setCurrentChatId(null);
     setMessages([]);
+    setIsChatOpen(false);
   }, []);
 
   const sendMessage = useCallback((chatId, text) => {
@@ -129,10 +187,16 @@ export const ChatProvider = ({ children }) => {
     <ChatContext.Provider
       value={{
         chats,
+        requests,
+        isChatOpen,
         loadChats,
+        loadRequests,
+        acceptRequest,
+        ignoreRequest,
+        deleteChat,
         currentChatId,
         openChat,
-        closeChat, // ДОДАНО
+        closeChat,
         messages,
         sendMessage,
         startNewChat,

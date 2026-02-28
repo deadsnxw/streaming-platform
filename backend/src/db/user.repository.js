@@ -30,6 +30,34 @@ export const findUserByNickname = async (nickname) => {
     return rows[0];
 };
 
+/**
+ * Search users by nickname (partial, case-insensitive).
+ * Returns public profile fields for display in search results.
+ */
+export const searchUsersByNickname = async (query, limit = 20) => {
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        return [];
+    }
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
+    const pattern = `%${query.trim()}%`;
+    const { rows } = await pool.query(
+        `SELECT 
+            u.user_id,
+            u.nickname,
+            u.avatar_url,
+            COALESCE(COUNT(s.subscription_id), 0) as subscriber_count
+         FROM users u
+         LEFT JOIN subscriptions s ON u.user_id = s.channel_id
+         WHERE u.is_active = true
+           AND u.nickname ILIKE $1
+         GROUP BY u.user_id
+         ORDER BY u.nickname ASC
+         LIMIT $2`,
+        [pattern, safeLimit]
+    );
+    return rows;
+};
+
 export const getAllUsers = async () => {
     const { rows } = await pool.query(
         `SELECT 

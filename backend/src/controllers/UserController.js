@@ -1,4 +1,4 @@
-import { getAllUsers, getRecommendedUsersForSubscriber, getUserById, updateUser, findUserByNickname } from '../db/user.repository.js';
+import { getAllUsers, getRecommendedUsersForSubscriber, getUserById, updateUser, findUserByNickname, searchUsersByNickname } from '../db/user.repository.js';
 
 const BIO_MAX_LENGTH = 500;
 
@@ -16,6 +16,20 @@ export const getUser = async (req, res) => {
 export const getUsers = async (req, res) => {
     const users = await getAllUsers();
     res.json(users);
+};
+
+export const searchUsersController = async (req, res) => {
+    try {
+        const { q, limit = 20 } = req.query;
+        if (!q || String(q).trim().length === 0) {
+            return res.json([]);
+        }
+        const users = await searchUsersByNickname(String(q).trim(), limit);
+        res.json(users);
+    } catch (error) {
+        console.error('Search users error:', error);
+        res.status(500).json({ message: 'Failed to search users', error: error.message });
+    }
 };
 
 export const getRecommendedUsers = async (req, res) => {

@@ -68,7 +68,7 @@
   min-width: 180px;
   display: flex;
   align-items: center;
-  background: #efeff1;
+  background: #EEEEF5;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid transparent;
@@ -122,6 +122,11 @@
   justify-content: center;
   transition: color 0.2s, background 0.2s;
 }
+
+.navbar-icon-btn.active {
+  color: #9147ff;
+}
+
 .navbar-icon-btn:hover {
   color: #1f1f23;
   background: rgba(0, 0, 0, 0.06);

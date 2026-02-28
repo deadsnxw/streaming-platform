@@ -2,28 +2,40 @@ import React, { useState, useEffect, useRef } from "react";
 import { useChat } from "../../context/chatContext";
 import { authService } from "../../services/authService";
 import { getUploadsBaseUrl } from "../../services/api";
+import "../../styles/FloatingChatButton.css";
 
-const PANEL_WIDTH = 400;
-const PANEL_MAX_WIDTH = "95vw";
+const NAVBAR_HEIGHT = 56;
+
+const TAB_CHATS = "chats";
+const TAB_REQUESTS = "requests";
 
 const FloatingChatButton = () => {
-    const { chats, loadChats, openChat, closeChat, currentChatId, messages, sendMessage } = useChat();
+    const { chats, requests, loadChats, loadRequests, openChat, closeChat, currentChatId, messages, sendMessage, acceptRequest, ignoreRequest, deleteChat } = useChat();
     const [open, setOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState(TAB_CHATS);
+    const [chatSearchQuery, setChatSearchQuery] = useState("");
     const [text, setText] = useState("");
+    const [menuOpen, setMenuOpen] = useState(false);
     const messagesEndRef = useRef(null);
+    const menuRef = useRef(null);
+
     const currentUser = authService.getCurrentUser();
+
+    const filteredChats = chatSearchQuery.trim()
+        ? chats.filter((c) => c.nickname && c.nickname.toLowerCase().includes(chatSearchQuery.trim().toLowerCase()))
+        : chats;
 
     useEffect(() => {
         loadChats();
-    }, [loadChats]);
+        loadRequests();
+    }, [loadChats, loadRequests]);
 
     useEffect(() => {
-        const openPanel = () => setOpen(true);
-        window.addEventListener("openChatPanel", openPanel);
-        return () => window.removeEventListener("openChatPanel", openPanel);
+        const togglePanel = () => setOpen((prev) => !prev);
+        window.addEventListener("openChatPanel", togglePanel);
+        return () => window.removeEventListener("openChatPanel", togglePanel);
     }, []);
 
-    // Якщо чат відкрили ззовні (наприклад з профілю) — показати оверлей
     useEffect(() => {
         if (currentChatId && !open) setOpen(true);
     }, [currentChatId, open]);
@@ -32,10 +44,14 @@ const FloatingChatButton = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    const currentChat = currentChatId ? chats.find((c) => c.chat_id === currentChatId) : null;
+    const currentChat = currentChatId
+        ? chats.find((c) => c.chat_id === currentChatId) || requests.find((r) => r.chat_id === currentChatId)
+        : null;
+    const isRequestView = currentChatId && requests.some((r) => r.chat_id === currentChatId);
     const showConversation = open && currentChatId && currentChat;
 
     const handleBack = () => {
+        setMenuOpen(false);
         closeChat();
         setText("");
     };
@@ -46,246 +62,148 @@ const FloatingChatButton = () => {
         setText("");
     };
 
-    const handleSelectChat = (chatId) => {
-        openChat(chatId);
+    const handleSelectChat = (chatId) => openChat(chatId);
+    const handleSelectRequest = (chatId) => openChat(chatId);
+
+    const handleAcceptRequest = async () => {
+        if (!currentChatId) return;
+        try {
+            await acceptRequest(currentChatId);
+            setActiveTab(TAB_CHATS);
+            setText("");
+        } catch (err) {
+            console.error(err);
+        }
     };
 
-    if (!open) return null;
+    const handleIgnoreRequest = async () => {
+        if (!currentChatId) return;
+        try {
+            await ignoreRequest(currentChatId);
+            closeChat();
+            setText("");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteChat = async () => {
+        if (!currentChatId) return;
+        try {
+            await deleteChat(currentChatId);
+            closeChat();
+            setText("");
+            setMenuOpen(false);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        const closeMenu = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+        };
+        document.addEventListener("click", closeMenu);
+        return () => document.removeEventListener("click", closeMenu);
+    }, [menuOpen]);
 
     return (
-        <>
-            <div
-                style={{
-                    position: "fixed",
-                    inset: 0,
-                    background: "rgba(0,0,0,0.35)",
-                    zIndex: 1100,
-                }}
-                onClick={() => {
-                    setOpen(false);
-                    if (showConversation) handleBack();
-                }}
-            />
-
-            <div
-                style={{
-                    position: "fixed",
-                    top: 0,
-                    right: 0,
-                    height: "100vh",
-                    width: PANEL_WIDTH,
-                    maxWidth: PANEL_MAX_WIDTH,
-                    background: "#fff",
-                    boxShadow: "-4px 0 18px rgba(0,0,0,0.18)",
-                    zIndex: 1101,
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {showConversation ? (
-                    /* ─── Перегляд розмови (як на скріншоті) ─── */
-                    <>
-                        {/* Шапка: назад, аватар + нік, меню */}
-                        <div
-                            style={{
-                                flexShrink: 0,
-                                padding: "12px 16px",
-                                borderBottom: "1px solid #eee",
-                                background: "#FAFAFA",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 12,
-                            }}
+        <div
+            className={`chat-panel-wrapper ${open ? "open" : "closed"}`}
+            style={{ top: NAVBAR_HEIGHT, height: `calc(100vh - ${NAVBAR_HEIGHT}px)` }}
+        >
+            {showConversation ? (
+                /* ─── Перегляд розмови ─── */
+                <>
+                    {/* Шапка */}
+                    <div className="chat-conv-header">
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            className="chat-back-btn"
+                            aria-label="Назад"
                         >
-                            <button
-                                type="button"
-                                onClick={handleBack}
-                                style={{
-                                    background: "none",
-                                    border: "none",
-                                    padding: 8,
-                                    cursor: "pointer",
-                                    fontSize: 22,
-                                    color: "#1f1f23",
-                                    lineHeight: 1,
-                                }}
-                                aria-label="Назад"
-                            >
-                                ‹
-                            </button>
-                            <div
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    minWidth: 0,
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        width: 44,
-                                        height: 44,
-                                        borderRadius: "50%",
-                                        overflow: "hidden",
-                                        background: "#e5e5e5",
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    {currentChat.avatar_url ? (
-                                        <img
-                                            src={getUploadsBaseUrl() + currentChat.avatar_url}
-                                            alt=""
-                                            style={{
-                                                width: "100%",
-                                                height: "100%",
-                                                objectFit: "cover",
-                                            }}
-                                        />
-                                    ) : (
-                                        <span
-                                            style={{
-                                                position: "absolute",
-                                                inset: 0,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                fontSize: 18,
-                                                fontWeight: "bold",
-                                                color: "#6441A5",
-                                            }}
-                                        >
-                                            {currentChat.nickname?.charAt(0).toUpperCase() || "?"}
-                                        </span>
-                                    )}
-                                </div>
-                                <span
-                                    style={{
-                                        marginTop: 4,
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                        color: "#1f1f23",
-                                        whiteSpace: "nowrap",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        maxWidth: "100%",
-                                    }}
-                                >
-                                    {currentChat.nickname}
-                                </span>
+                            ‹
+                        </button>
+
+                        <div className="chat-conv-header-center">
+                            <div className="chat-avatar">
+                                {currentChat.avatar_url ? (
+                                    <img src={getUploadsBaseUrl() + currentChat.avatar_url} alt="" />
+                                ) : (
+                                    <span className="chat-avatar-placeholder">
+                                        {currentChat.nickname?.charAt(0).toUpperCase() || "?"}
+                                    </span>
+                                )}
                             </div>
+                            <span className="chat-conv-nickname">{currentChat.nickname}</span>
+                        </div>
+
+                        <div className="chat-menu-wrapper" ref={menuRef}>
                             <button
                                 type="button"
-                                style={{
-                                    background: "none",
-                                    border: "none",
-                                    padding: 8,
-                                    cursor: "pointer",
-                                    fontSize: 18,
-                                    color: "#53535f",
-                                    lineHeight: 1,
-                                }}
+                                onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+                                className="chat-menu-btn"
                                 aria-label="Меню"
                             >
                                 ⋮
                             </button>
+                            {menuOpen && !isRequestView && (
+                                <div className="chat-menu-dropdown">
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteChat}
+                                        className="chat-menu-delete-btn"
+                                    >
+                                        Видалити чат
+                                    </button>
+                                </div>
+                            )}
                         </div>
+                    </div>
 
-                        {/* Повідомлення */}
-                        <div
-                            style={{
-                                flex: 1,
-                                overflowY: "auto",
-                                padding: "12px 16px",
-                                background: "#f5f5f5",
-                            }}
-                        >
-                            {messages.length === 0 ? (
-                                <p
-                                    style={{
-                                        textAlign: "center",
-                                        color: "#999",
-                                        marginTop: 40,
-                                        fontSize: 14,
-                                    }}
-                                >
-                                    Поки що немає повідомлень
-                                </p>
-                            ) : (
-                                messages.map((m) => {
-                                    const isOwn = m.sender_id === currentUser?.user_id;
-                                    return (
-                                        <div
-                                            key={m.message_id}
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: isOwn ? "flex-end" : "flex-start",
-                                                marginBottom: 10,
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    maxWidth: "78%",
-                                                    background: isOwn ? "#6441A5" : "#e8e8e8",
-                                                    color: isOwn ? "#fff" : "#1f1f23",
-                                                    padding: "10px 14px",
-                                                    borderRadius: isOwn
-                                                        ? "16px 16px 4px 16px"
-                                                        : "16px 16px 16px 4px",
-                                                    wordWrap: "break-word",
-                                                    fontSize: 14,
-                                                }}
-                                            >
-                                                <div>{m.text}</div>
-                                                <div
-                                                    style={{
-                                                        fontSize: 11,
-                                                        opacity: 0.85,
-                                                        marginTop: 4,
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "flex-end",
-                                                        gap: 4,
-                                                    }}
-                                                >
-                                                    {new Date(m.created_at).toLocaleTimeString("uk-UA", {
-                                                        hour: "2-digit",
-                                                        minute: "2-digit",
-                                                    })}
-                                                </div>
+                    {/* Повідомлення */}
+                    <div className="chat-messages-area">
+                        {messages.length === 0 ? (
+                            <p className="chat-messages-empty">Поки що немає повідомлень</p>
+                        ) : (
+                            messages.map((m) => {
+                                const isOwn = m.sender_id === currentUser?.user_id;
+                                return (
+                                    <div
+                                        key={m.message_id}
+                                        className={`chat-message-row ${isOwn ? "own" : "other"}`}
+                                    >
+                                        <div className={`chat-message-bubble ${isOwn ? "own" : "other"}`}>
+                                            <div>{m.text}</div>
+                                            <div className="chat-message-time">
+                                                {new Date(m.created_at).toLocaleTimeString("uk-UA", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
                                             </div>
                                         </div>
-                                    );
-                                })
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
 
-                        {/* Поле вводу внизу */}
-                        <div
-                            style={{
-                                flexShrink: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                                padding: "12px 16px",
-                                borderTop: "1px solid #eee",
-                                background: "#fff",
-                            }}
-                        >
-                            <button
-                                type="button"
-                                style={{
-                                    background: "none",
-                                    border: "none",
-                                    padding: 8,
-                                    cursor: "pointer",
-                                    color: "#6b6b76",
-                                    fontSize: 18,
-                                }}
-                                aria-label="Вкладення"
-                            >
+                    {/* Футер */}
+                    {isRequestView ? (
+                        <div className="chat-request-actions">
+                            <button type="button" onClick={handleAcceptRequest} className="chat-accept-btn">
+                                Прийняти
+                            </button>
+                            <button type="button" onClick={handleIgnoreRequest} className="chat-ignore-btn">
+                                Ігнорувати
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="chat-input-area">
+                            <button type="button" className="chat-attach-btn" aria-label="Вкладення">
                                 📎
                             </button>
                             <input
@@ -299,91 +217,66 @@ const FloatingChatButton = () => {
                                     }
                                 }}
                                 placeholder="Написати"
-                                style={{
-                                    flex: 1,
-                                    padding: "10px 16px",
-                                    borderRadius: 24,
-                                    border: "1px solid #e0e0e0",
-                                    outline: "none",
-                                    fontSize: 14,
-                                    background: "#f5f5f5",
-                                }}
+                                className="chat-text-input"
                             />
                             <button
                                 type="button"
                                 onClick={handleSend}
                                 disabled={!text.trim()}
-                                style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: "50%",
-                                    border: "none",
-                                    background: text.trim() ? "#6441A5" : "#ccc",
-                                    color: "#fff",
-                                    cursor: text.trim() ? "pointer" : "default",
-                                    fontSize: 16,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
+                                className={`chat-send-btn ${text.trim() ? "active" : "disabled"}`}
                                 aria-label="Надіслати"
                             >
                                 ➤
                             </button>
                         </div>
-                    </>
-                ) : (
-                    /* ─── Список чатів ─── */
-                    <>
-                        <div
-                            style={{
-                                padding: "14px 18px",
-                                borderBottom: "1px solid #eee",
-                                backgroundColor: "#6441A5",
-                                color: "#fff",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                fontWeight: "bold",
-                            }}
+                    )}
+                </>
+            ) : (
+                /* ─── Список чатів або запитів ─── */
+                <>
+                    {/* Tabs */}
+                    <div className="chat-list-tabs">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab(TAB_CHATS)}
+                            className={`chat-tab-btn ${activeTab === TAB_CHATS ? "active" : "inactive"}`}
                         >
-                            <span>Мої чати</span>
-                            <button
-                                onClick={() => setOpen(false)}
-                                style={{
-                                    background: "transparent",
-                                    border: "none",
-                                    color: "#fff",
-                                    fontSize: 20,
-                                    cursor: "pointer",
-                                    padding: 4,
-                                    lineHeight: 1,
-                                }}
-                                title="Закрити"
-                            >
-                                ✕
-                            </button>
-                        </div>
+                            Чати
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab(TAB_REQUESTS)}
+                            className={`chat-tab-btn ${activeTab === TAB_REQUESTS ? "active" : "inactive"}`}
+                        >
+                            Запити
+                        </button>
+                    </div>
 
-                        <div
-                            style={{
-                                flex: 1,
-                                overflowY: "auto",
-                                padding: "8px 0",
-                            }}
-                        >
-                            {chats && chats.length > 0 ? (
-                                chats.map((c) => (
+                    {/* Пошук */}
+                    {activeTab === TAB_CHATS && (
+                        <div className="chat-search-wrapper">
+                            <input
+                                type="text"
+                                value={chatSearchQuery}
+                                onChange={(e) => setChatSearchQuery(e.target.value)}
+                                placeholder="Пошук чату..."
+                                className="chat-search-input"
+                            />
+                        </div>
+                    )}
+
+                    {/* Список */}
+                    <div className="chat-list-scroll">
+                        {activeTab === TAB_CHATS && (
+                            chatSearchQuery.trim() && filteredChats.length === 0 ? (
+                                <div className="chat-list-empty">Чат не знайдено</div>
+                            ) : filteredChats && filteredChats.length > 0 ? (
+                                filteredChats.map((c) => (
                                     <div
                                         key={c.chat_id}
                                         role="button"
                                         tabIndex={0}
-                                        style={{
-                                            padding: "12px 16px",
-                                            borderBottom: "1px solid #f1f1f1",
-                                            cursor: "pointer",
-                                            transition: "background 0.15s",
-                                        }}
+                                        className="chat-list-item"
                                         onClick={() => handleSelectChat(c.chat_id)}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter" || e.key === " ") {
@@ -391,59 +284,20 @@ const FloatingChatButton = () => {
                                                 handleSelectChat(c.chat_id);
                                             }
                                         }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-                                        onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
                                     >
-                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                            <div
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    borderRadius: "50%",
-                                                    overflow: "hidden",
-                                                    backgroundColor: "#e5e5e5",
-                                                    flexShrink: 0,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                }}
-                                            >
+                                        <div className="chat-list-item-inner">
+                                            <div className="chat-list-avatar">
                                                 {c.avatar_url ? (
-                                                    <img
-                                                        src={getUploadsBaseUrl() + c.avatar_url}
-                                                        alt=""
-                                                        style={{
-                                                            width: "100%",
-                                                            height: "100%",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
+                                                    <img src={getUploadsBaseUrl() + c.avatar_url} alt="" />
                                                 ) : (
-                                                    <span
-                                                        style={{
-                                                            fontSize: 18,
-                                                            fontWeight: "bold",
-                                                            color: "#6441A5",
-                                                        }}
-                                                    >
+                                                    <span className="chat-list-avatar-placeholder">
                                                         {c.nickname?.charAt(0).toUpperCase() || "?"}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <strong style={{ display: "block", fontSize: 14 }}>
-                                                    {c.nickname}
-                                                </strong>
-                                                <p
-                                                    style={{
-                                                        margin: 0,
-                                                        fontSize: 12,
-                                                        color: "#666",
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                    }}
-                                                >
+                                            <div className="chat-list-info">
+                                                <strong className="chat-list-name">{c.nickname}</strong>
+                                                <p className="chat-list-last-msg">
                                                     {c.last_message || "Почніть розмову"}
                                                 </p>
                                             </div>
@@ -451,15 +305,53 @@ const FloatingChatButton = () => {
                                     </div>
                                 ))
                             ) : (
-                                <div style={{ padding: 30, textAlign: "center", color: "#999" }}>
-                                    У вас поки немає чатів
-                                </div>
-                            )}
-                        </div>
-                    </>
-                )}
-            </div>
-        </>
+                                <div className="chat-list-empty">У вас поки немає чатів</div>
+                            )
+                        )}
+
+                        {activeTab === TAB_REQUESTS && (
+                            requests && requests.length > 0 ? (
+                                requests.map((r) => (
+                                    <div
+                                        key={r.chat_id}
+                                        role="button"
+                                        tabIndex={0}
+                                        className="chat-list-item"
+                                        onClick={() => handleSelectRequest(r.chat_id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                handleSelectRequest(r.chat_id);
+                                            }
+                                        }}
+                                    >
+                                        <div className="chat-list-item-inner">
+                                            <div className="chat-list-avatar">
+                                                {r.avatar_url ? (
+                                                    <img src={getUploadsBaseUrl() + r.avatar_url} alt="" />
+                                                ) : (
+                                                    <span className="chat-list-avatar-placeholder">
+                                                        {r.nickname?.charAt(0).toUpperCase() || "?"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="chat-list-info">
+                                                <strong className="chat-list-name">{r.nickname}</strong>
+                                                <p className="chat-list-last-msg">
+                                                    {r.last_message || "Нове повідомлення"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="chat-list-empty">Немає запитів на чат</div>
+                            )
+                        )}
+                    </div>
+                </>
+            )}
+        </div>
     );
 };
 
