@@ -66,9 +66,13 @@ const UploadVideoForm = ({ onUploadSuccess }) => {
             <textarea
                 placeholder="Опис"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+                maxLength={500}
                 style={{ display: 'block', marginBottom: '10px', width: '300px', height: '80px' }}
             />
+            <p style={{ fontSize: '11px', color: description.length >= 450 ? '#dc3545' : '#999', margin: '-6px 0 10px' }}>
+                {description.length}/500
+            </p>
             <input
                 type="text"
                 placeholder="Теги (через кому, наприклад: FPS, MOBA, talk)"

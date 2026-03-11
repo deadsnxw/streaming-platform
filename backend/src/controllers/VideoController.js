@@ -10,7 +10,9 @@ import {
     deleteVideo,
     recordVideoView,
     searchVideos,
-    getPopularTags
+    getPopularTags,
+    replaceVideoTags,
+    getVideoTags
 } from '../db/video.repository.js';
 
 export const watchVideo = async (req, res) => {
@@ -204,37 +206,40 @@ export const getUserVideosList = async (req, res) => {
 export const updateVideoDetails = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, isPublic } = req.body;
-
-        // ВИПРАВЛЕНО: підтримка обох варіантів
+        const { title, description, isPublic, tags } = req.body;
         const userId = req.user.user_id || req.user.id;
 
-        if (!userId) {
-            return res.status(401).json({ message: 'User not authenticated' });
-        }
-
-        // ДОДАНО: логування для дебагу
-        console.log('Update video request:', {
-            videoId: id,
-            userId: userId,
-            body: req.body
-        });
+        if (!userId) return res.status(401).json({ message: 'User not authenticated' });
 
         const updateData = {};
-        if (title !== undefined) updateData.title = title;
+        if (title       !== undefined) updateData.title       = title;
         if (description !== undefined) updateData.description = description;
-        if (isPublic !== undefined) updateData.is_public = isPublic === 'true' || isPublic === true;
+        if (isPublic    !== undefined) updateData.is_public   = isPublic === 'true' || isPublic === true;
 
-        const video = await updateVideo(id, userId, updateData);
-
-        if (!video) {
-            return res.status(404).json({ message: 'Video not found or access denied' });
+        // Обновление миниатюры если загружена новая
+        const thumbnailFile = req.files?.thumbnail?.[0];
+        if (thumbnailFile) {
+            const baseUrl = `${req.protocol}://${req.get('host')}`;
+            updateData.thumbnail_url = `${baseUrl}/uploads/thumbnails/${thumbnailFile.filename}`;
         }
 
-        res.json({
-            message: 'Video updated successfully',
-            video
-        });
+        const video = await updateVideo(id, userId, updateData);
+        if (!video) return res.status(404).json({ message: 'Video not found or access denied' });
+
+        // Обновление тегов если переданы
+        if (tags !== undefined) {
+            let tagArray = [];
+            if (typeof tags === 'string') {
+                tagArray = tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+            } else if (Array.isArray(tags)) {
+                tagArray = tags.map(t => String(t).trim()).filter(t => t.length > 0);
+            }
+            video.tags = await replaceVideoTags(id, tagArray);
+        } else {
+            video.tags = await getVideoTags(id);
+        }
+
+        res.json({ message: 'Video updated successfully', video });
     } catch (error) {
         console.error('Update video error:', error);
         res.status(500).json({ message: 'Failed to update video', error: error.message });

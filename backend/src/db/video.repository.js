@@ -281,6 +281,15 @@ export const addTagsToVideo = async (videoId, tagNames) => {
     return rows;
 };
 
+export const replaceVideoTags = async (videoId, tagNames) => {
+    // Удаляем все старые теги
+    await pool.query(`DELETE FROM video_tags WHERE video_id = $1`, [videoId]);
+    
+    if (!tagNames || tagNames.length === 0) return [];
+    
+    return addTagsToVideo(videoId, tagNames);
+};
+
 export const getVideoTags = async (videoId) => {
     const { rows } = await pool.query(
         `SELECT t.tag_id, t.name 
