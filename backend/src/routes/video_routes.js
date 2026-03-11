@@ -44,7 +44,14 @@ router.get('/:id/watch', authenticateToken, watchVideo);
 
 router.post('/:id/watch', authenticateToken, recordWatch);
 
-router.put('/:id', authenticateToken, updateVideoDetails);
+router.put(
+    '/:id',
+    authenticateToken,
+    uploadMiddleware.fields([
+        { name: 'thumbnail', maxCount: 1 }
+    ]),
+    updateVideoDetails
+);
 
 router.delete('/:id', authenticateToken, deleteVideoById);
 

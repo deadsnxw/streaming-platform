@@ -84,18 +84,14 @@ const UploadVideoPage = () => {
                     </label>
                     <textarea
                         value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        style={{ 
-                            width: '100%', 
-                            padding: '10px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            minHeight: '100px',
-                            fontSize: '14px',
-                            resize: 'vertical'
-                        }}
+                        onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+                        maxLength={500}
+                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '100px', fontSize: '14px', resize: 'vertical' }}
                         placeholder="Опишіть ваше відео (опціонально)"
                     />
+                    <p style={{ fontSize: '12px', color: description.length >= 450 ? '#dc3545' : '#999', margin: '4px 0 0', textAlign: 'right' }}>
+                        {description.length}/500
+                    </p>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
