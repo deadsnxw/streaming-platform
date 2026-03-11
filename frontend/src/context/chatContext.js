@@ -17,7 +17,7 @@ export const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (!currentUser) return;
-    const s = io("http://localhost:5000", {
+    const s = io(window.location.origin, {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
