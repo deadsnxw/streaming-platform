@@ -171,94 +171,92 @@
 
 @media (max-width: 767px) {
 
-  /* Ховаємо десктопний навбар */
   .navbar {
     display: none;
   }
 
-  /* Мобільний навбар знизу */
   .mobile-navbar {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 72px;
-    background: #ffffff;
-    border-top: 1px solid #e8e8f0;
+    height: 68px;
+    background: #0C0C0C;
+    border-top: 1px solid #ebebf0;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0 8px;
+    padding: 0 4px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 1000;
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -1px 0 rgba(0,0,0,0.06);
     font-family: 'HelveticaNeueCyr', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
-  /* Кнопки навбару */
   .mobile-nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
     background: none;
     border: none;
     cursor: pointer;
-    color: #8888a0;
+    color: #9898b0;
     text-decoration: none;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 10px;
-    transition: color 0.2s;
+    transition: color 0.18s;
     font-family: inherit;
-    min-width: 52px;
+    min-width: 48px;
   }
 
   .mobile-nav-item span {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     line-height: 1;
+    letter-spacing: 0.01em;
   }
 
   .mobile-nav-item svg {
     flex-shrink: 0;
+    stroke-width: 1.8;
   }
 
   .mobile-nav-item.active {
-    color: #7c3aed;
+    color: #6046F6;
   }
 
-  /* Центральна кнопка "+" */
+  /* Центральная кнопка "+" */
   .mobile-nav-add {
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background: #7c3aed;
+    background: #6046F6;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
-    transition: background 0.2s, transform 0.1s;
+    transition: background 0.18s, transform 0.12s;
     flex-shrink: 0;
+    margin-bottom: 4px;
   }
 
   .mobile-nav-add:active {
-    transform: scale(0.94);
+    transform: scale(0.92);
     background: #6d28d9;
   }
 
-  /* Аватар в навбарі */
+  /* Аватар */
   .mobile-nav-avatar {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid transparent;
+    transition: border-color 0.18s;
   }
 
   .mobile-nav-item.active .mobile-nav-avatar {
