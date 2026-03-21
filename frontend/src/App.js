@@ -65,11 +65,23 @@ function LayoutWithNav({ user, children, onUserUpdate }) {
 
 export default function App() {
     const [user, setUser] = useState(() => authService.getCurrentUser());
+    const isAuthenticated = authService.isAuthenticated();
 
     useEffect(() => {
         const handleStorage = () => setUser(authService.getCurrentUser());
+        const handleUnauthorized = () => setUser(null);
+
+        if (!authService.getToken() && authService.getCurrentUser()) {
+            authService.logout();
+            setUser(null);
+        }
+
         window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
+        window.addEventListener('unauthorized', handleUnauthorized);
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            window.removeEventListener('unauthorized', handleUnauthorized);
+        };
     }, []);
 
     useEffect(() => {
@@ -98,15 +110,15 @@ export default function App() {
                         <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
                         <Route path="/register" element={<RegisterPage onRegister={(u) => setUser(u)} />} />
                         <Route path="/profile/:userId" element={<ProfilePage />} />
-                        <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" replace />} />
-                        <Route path="/settings" element={user ? <SettingsPage onProfileUpdate={setUser} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} />
+                        <Route path="/profile" element={user && isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />} />
+                        <Route path="/settings" element={user && isAuthenticated ? <SettingsPage onProfileUpdate={setUser} onLogout={() => setUser(null)} /> : <Navigate to="/login" replace />} />
                         <Route path="/reactivate" element={<ReactivatePage onLogin={setUser} />} />
                         <Route path="/delete-account" element={<DeleteAccountPage onLogin={setUser} onLogout={() => setUser(null)} />} />
                         <Route path="/live" element={<LivePage />} />
                         <Route path="/stream/:userId" element={<StreamPage />} />
                         <Route path="/upload" element={<UploadVideoPage />} />
-                        <Route path="/controlpanel/*" element={user ? <ControlPanelPage user={user} /> : <Navigate to="/login" replace />} />
-                        <Route path="/" element={user ? <HomePage user={user} /> : <LandingPage />} />
+                        <Route path="/controlpanel/*" element={user && isAuthenticated ? <ControlPanelPage user={user} /> : <Navigate to="/login" replace />} />
+                        <Route path="/" element={user && isAuthenticated ? <HomePage user={user} /> : <LandingPage />} />
                         <Route path="/password-reset" element={<ForgotPasswordPage />} />
                         <Route path="/password-reset/verify" element={<VerifyCodePage />} />
                         <Route path="/password-reset/new-password" element={<ResetPasswordPage />} />
