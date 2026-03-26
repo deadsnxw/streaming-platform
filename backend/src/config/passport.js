@@ -1,6 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as DiscordStrategy } from 'passport-discord';
+import { Strategy as OpenIDConnectStrategy } from 'passport-openidconnect';
 import { pool } from '../db/db.js';
 
 async function handleOAuthLogin(provider, providerId, email, avatar, displayName, accessToken, refreshToken, done) {
@@ -78,6 +79,23 @@ passport.use(new DiscordStrategy({
     return handleOAuthLogin('discord', profile.id, email, avatar, profile.username, accessToken, refreshToken, done);
 }));
 
+passport.use('microsoft', new OpenIDConnectStrategy({
+    issuer: 'https://login.microsoftonline.com/common/v2.0',
+    authorizationURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    tokenURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    userInfoURL: 'https://graph.microsoft.com/oidc/userinfo',
+    clientID: process.env.MICROSOFT_CLIENT_ID,
+    clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+    callbackURL: process.env.MICROSOFT_CALLBACK_URL,
+    scope: ['openid', 'email', 'profile'],
+    pkce: true,
+    state: true,
+}, async (issuer, profile, done) => {
+    const email = profile.emails?.[0]?.value || null;
+    const avatar = null;
+    return handleOAuthLogin('microsoft', profile.id, email, avatar, profile.displayName, null, null, done);
+}));
+
 async function generateUniqueNickname(base) {
     const clean = base.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 40) || 'user';
     let nickname = clean;
@@ -94,4 +112,5 @@ async function generateUniqueNickname(base) {
 }
 
 export { generateUniqueNickname };
+export { handleOAuthLogin };
 export default passport;

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import session from 'express-session';
 import authRoutes from './routes/auth_routes.js';
 import userRoutes from './routes/user_routes.js';
 import videoRoutes from './routes/video_routes.js';
@@ -15,7 +16,16 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+}));
+
 app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/uploads', express.static(path.resolve('uploads')));
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaDiscord, FaGoogle, FaXbox } from "react-icons/fa";
+import { FaDiscord, FaGoogle, FaMicrosoft } from "react-icons/fa";
 import "../styles/LandingPage.css";
 
 function useWindowWidth() {
@@ -26,6 +26,10 @@ export default function LandingPage() {
 
   const handleDiscordLogin = () => {
     window.location.href = `${process.env.REACT_APP_API_URL}/auth/discord`;
+  };
+
+  const handleMicrosoftLogin = () => {
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/microsoft`;
   };
 
   return (
@@ -88,7 +92,7 @@ export default function LandingPage() {
                 <div className="social-buttons">
                   <button className="social-button google" onClick={handleGoogleLogin}>  <FaGoogle size={26} color="#fff" />  </button>
                   <button className="social-button discord" onClick={handleDiscordLogin}><FaDiscord size={26} color="#fff" /></button>
-                  <button className="social-button xbox">   <FaXbox size={26} color="#fff" />   </button>
+                  <button className="social-button microsoft" onClick={handleMicrosoftLogin}>   <FaMicrosoft size={26} color="#fff" />   </button>
                 </div>
               </div>
             </div>
@@ -135,7 +139,7 @@ export default function LandingPage() {
             <div className="social-buttons">
                   <button className="social-button google" onClick={handleGoogleLogin}>  <FaGoogle size={26} color="#fff" />  </button>
                   <button className="social-button discord" onClick={handleDiscordLogin}><FaDiscord size={26} color="#fff" /></button>
-                  <button className="social-button xbox">   <FaXbox size={26} color="#fff" />   </button>
+                  <button className="social-button microsoft" onClick={handleMicrosoftLogin}>   <FaMicrosoft size={26} color="#fff" />   </button>
             </div>
           </div>
         </>
